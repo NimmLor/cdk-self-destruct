@@ -1,6 +1,6 @@
 const { awscdk } = require('projen');
 
-const cdkVersion = '2.25.0';
+const cdkVersion = '2.51.0';
 
 const project = new awscdk.AwsCdkConstructLibrary({
   author: 'Lorenz Nimmervoll',
@@ -12,9 +12,12 @@ const project = new awscdk.AwsCdkConstructLibrary({
   stability: 'experimental',
   description: 'A construct that allows you to self-destruct your AWS resources in a given stack',
 
-  // deps: [],                /* Runtime dependencies of this module. */
-  // description: undefined,  /* The description is just a string that helps people understand the purpose of the package. */
-  // devDeps: [],             /* Build dependencies for this module. */
-  // packageName: undefined,  /* The "name" in package.json. */
+  deps: [],
+  devDeps: ['aws-sdk', 'esbuild'],
+  packageName: 'cdk-self-destruct',
+  jest: true,
+  jestOptions: {
+    extraCliOptions: ['--testMatch "**/(test|src)/**/*(*.)@(spec|test).ts?(x)"'],
+  },
 });
 project.synth();

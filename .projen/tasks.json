@@ -203,7 +203,7 @@
       "description": "Run tests",
       "steps": [
         {
-          "exec": "jest --passWithNoTests --updateSnapshot",
+          "exec": "jest --passWithNoTests --testMatch \"**/(test|src)/**/*(*.)@(spec|test).ts?(x)\" --updateSnapshot",
           "receiveArgs": true
         },
         {
