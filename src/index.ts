@@ -10,10 +10,12 @@ import {
   CfnOutput,
   aws_lambda,
   Duration,
+  aws_scheduler,
 } from 'aws-cdk-lib';
 import { CfnUserPool } from 'aws-cdk-lib/aws-cognito';
 import { CfnTable as CfnDynamoTable } from 'aws-cdk-lib/aws-dynamodb';
 // import { FunctionUrlOptions } from 'aws-cdk-lib/aws-lambda';
+import { FunctionUrlOptions } from 'aws-cdk-lib/aws-lambda';
 import { CfnBucket } from 'aws-cdk-lib/aws-s3';
 import { CfnStateMachine } from 'aws-cdk-lib/aws-stepfunctions';
 import { Construct, IConstruct } from 'constructs';
@@ -43,7 +45,7 @@ export interface StepFunctionsOptions extends CommonOptions {
 
 export interface FunctionUrlConfig {
   readonly enabled: boolean;
-  // readonly options?: FunctionUrlOptions;
+  readonly options?: FunctionUrlOptions;
 }
 
 export interface TriggerOptions {
@@ -188,17 +190,45 @@ export class SelfDestructAspect implements IAspect {
         runtime: aws_lambda.Runtime.NODEJS_16_X,
       },
     );
-    // const handler = new aws_lambda.Function(this.scope, 'Default', {
-    //   code: Code.fromAsset( 'src/functions'),
-    //   runtime: aws_lambda.Runtime.NODEJS_16_X,
-    //   handler: 'hello.handler',
-    // });
 
     if (this.settings.trigger.addFunctionUrl?.enabled) {
       const functionUrl = handler.addFunctionUrl();
       new CfnOutput(this.scope, 'SelfDestructFunctionUrl', {
         value: functionUrl.url,
         exportName: 'SelfDestructFunctionUrl',
+      });
+    }
+
+    if (this.settings.trigger) {
+      const targetDate = new Date();
+      const scheduleExpression = `at(${targetDate.toISOString().substring(0, 19)})`;
+
+      const role = new aws_iam.Role(this.scope, 'ScheduleExecutionRole', {
+        assumedBy: new aws_iam.ServicePrincipal('scheduler.amazonaws.com', {
+          conditions: {
+            StringEquals: {
+              'aws:SourceAccount': Stack.of(this.scope).account,
+            },
+          },
+        }),
+        inlinePolicies: {
+          AllowLambdaInvoke: new aws_iam.PolicyDocument({
+            statements: [
+              new aws_iam.PolicyStatement({
+                actions: ['lambda:InvokeFunction'],
+                resources: [handler.functionArn, `${handler.functionArn}:*`],
+              }),
+            ],
+          }),
+        },
+      });
+
+      new aws_scheduler.CfnSchedule(this.scope, 'Schedule', {
+        flexibleTimeWindow: { mode: 'Off' },
+        description: 'Self Destruct Stack "' + Stack.of(this.scope).stackName + '" at ' + targetDate.toISOString().substring(0, 19),
+        scheduleExpression,
+        target: { arn: handler.functionArn, roleArn: role.roleArn },
+        name: 'Destroy Stack ' + Stack.of(this.scope).stackName,
       });
     }
 

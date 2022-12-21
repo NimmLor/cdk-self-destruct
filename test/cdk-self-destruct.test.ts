@@ -1,25 +1,32 @@
-import { App, Stack } from 'aws-cdk-lib';
+import {
+  App,
+  Stack,
+  aws_cognito,
+  aws_dynamodb,
+  aws_s3,
+  aws_stepfunctions,
+} from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
 import { SelfDestruct } from '../src/index';
 
-const mockApp = new App();
-const blankStack = new Stack(mockApp);
-// const demoStack = new Stack(mockApp);
+const blankApp = new App();
+const blankStack = new Stack(blankApp);
 
+const demoApp = new App();
+const demoStack = new Stack(demoApp);
 
-// new aws_stepfunctions.StateMachine(demoStack, 'TestStateMachine', {
-//   definition: new aws_stepfunctions.Pass(demoStack, 'TestPass'),
-// });
+new aws_stepfunctions.StateMachine(demoStack, 'TestStateMachine', {
+  definition: new aws_stepfunctions.Pass(demoStack, 'TestPass'),
+});
 
-// new aws_cognito.UserPool(demoStack, 'TestUserPool', {});
-// new aws_dynamodb.Table(demoStack, 'TestTable', {
-//   partitionKey: { name: 'id', type: aws_dynamodb.AttributeType.STRING },
-// });
+new aws_cognito.UserPool(demoStack, 'TestUserPool', {});
+new aws_dynamodb.Table(demoStack, 'TestTable', {
+  partitionKey: { name: 'id', type: aws_dynamodb.AttributeType.STRING },
+});
 
-// new aws_s3.Bucket(demoStack, 'TestBucket', {});
-// new aws_s3.Bucket(demoStack, 'HelloBucket', {});
+new aws_s3.Bucket(demoStack, 'TestBucket', {});
 
-new SelfDestruct(blankStack, 'SelfDestruct', {
+const selfDestructProps = {
   defaultDestoryAllResources: true,
   defaultPurgeResourceDependencies: true,
   trigger: {
@@ -27,16 +34,22 @@ new SelfDestruct(blankStack, 'SelfDestruct', {
       enabled: true,
     },
   },
-} );
+};
+new SelfDestruct(blankStack, 'SelfDestruct', selfDestructProps);
+new SelfDestruct(demoStack, 'SelfDestruct', selfDestructProps);
 
-const template = Template.fromStack(blankStack);
+const blankTemplate = Template.fromStack(blankStack);
+const demoTemplate = Template.fromStack(demoStack);
 
 test('Stack destruction lambda function is be configured with properties and execution roles', () => {
-  template.hasResourceProperties('AWS::Lambda::Function', {
+  blankTemplate.hasResourceProperties('AWS::Lambda::Function', {
+    Runtime: 'nodejs16.x',
+  });
+  demoTemplate.hasResourceProperties('AWS::Lambda::Function', {
     Runtime: 'nodejs16.x',
   });
 
-  template.hasResourceProperties('AWS::IAM::Role', {
+  const properties = {
     AssumeRolePolicyDocument: {
       Statement: [
         {
@@ -49,5 +62,26 @@ test('Stack destruction lambda function is be configured with properties and exe
       ],
       Version: '2012-10-17',
     },
+  };
+
+  blankTemplate.hasResourceProperties('AWS::IAM::Role', properties);
+  demoTemplate.hasResourceProperties('AWS::IAM::Role', properties);
+});
+
+test('Includes a s3 bucket with a deletionPolicy set to delete', () => {
+  demoTemplate.hasResource('AWS::S3::Bucket', {
+    DeletionPolicy: 'Delete',
+  });
+});
+
+test('Includes a cognito userpool with a deletionPolicy set to delete', () => {
+  demoTemplate.hasResource('AWS::Cognito::UserPool', {
+    DeletionPolicy: 'Delete',
+  });
+});
+
+test('Includes a dynamodb table with a deletionPolicy set to delete', () => {
+  demoTemplate.hasResource('AWS::DynamoDB::Table', {
+    DeletionPolicy: 'Delete',
   });
 });

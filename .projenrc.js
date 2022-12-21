@@ -11,6 +11,7 @@ const project = new awscdk.AwsCdkConstructLibrary({
   repositoryUrl: 'https://github.com/NimmLor/cdk-self-destruct.git',
   stability: 'experimental',
   description: 'A construct that allows you to self-destruct your AWS resources in a given stack',
+  keywords: ['cdk', 'awscdk', 'aws-cdk'],
 
   deps: [],
   devDeps: ['aws-sdk', 'esbuild'],

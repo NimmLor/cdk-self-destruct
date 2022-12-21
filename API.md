@@ -148,6 +148,7 @@ const functionUrlConfig: FunctionUrlConfig = { ... }
 | **Name** | **Type** | **Description** |
 | --- | --- | --- |
 | <code><a href="#cdk-self-destruct.FunctionUrlConfig.property.enabled">enabled</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#cdk-self-destruct.FunctionUrlConfig.property.options">options</a></code> | <code>aws-cdk-lib.aws_lambda.FunctionUrlOptions</code> | *No description.* |
 
 ---
 
@@ -158,6 +159,16 @@ public readonly enabled: boolean;
 ```
 
 - *Type:* boolean
+
+---
+
+##### `options`<sup>Optional</sup> <a name="options" id="cdk-self-destruct.FunctionUrlConfig.property.options"></a>
+
+```typescript
+public readonly options: FunctionUrlOptions;
+```
+
+- *Type:* aws-cdk-lib.aws_lambda.FunctionUrlOptions
 
 ---
 
