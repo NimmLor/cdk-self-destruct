@@ -13,6 +13,7 @@ const project = new awscdk.AwsCdkConstructLibrary({
   description:
     "A construct that allows you to self-destruct your AWS resources in a given stack",
   keywords: ["cdk", "awscdk", "aws-cdk"],
+  majorVersion: 1,
 
   deps: [],
   devDeps: ["aws-sdk", "esbuild"],

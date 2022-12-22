@@ -132,6 +132,8 @@ public readonly resourcesToDestroy: string[];
 
 A list of cloudformation resources that should be destroyed.
 
+> [https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html)
+
 ---
 
 *Example*
@@ -150,6 +152,8 @@ public readonly resourcesToRetain: string[];
 - *Type:* string[]
 
 A list of cloudformation resources that should be retained.
+
+> [https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html)
 
 ---
 
@@ -421,7 +425,7 @@ const scheduledTriggerOptions: ScheduledTriggerOptions = { ... }
 | --- | --- | --- |
 | <code><a href="#cdk-self-destruct.ScheduledTriggerOptions.property.enabled">enabled</a></code> | <code>boolean</code> | *No description.* |
 | <code><a href="#cdk-self-destruct.ScheduledTriggerOptions.property.afterDuration">afterDuration</a></code> | <code>aws-cdk-lib.Duration</code> | The duration after starting the deployment after which the stack should be deleted. |
-| <code><a href="#cdk-self-destruct.ScheduledTriggerOptions.property.atTimestamp">atTimestamp</a></code> | <code>number</code> | The timestamp at which the stack should be deleted. Must be a unix timestamp in milliseconds. |
+| <code><a href="#cdk-self-destruct.ScheduledTriggerOptions.property.atTimestamp">atTimestamp</a></code> | <code>number</code> | The timestamp at which the stack should be deleted. |
 
 ---
 
@@ -449,6 +453,13 @@ Cannot be used together with `atTimestamp`.
 
 ---
 
+*Example*
+
+```typescript
+Duration.days(1)
+```
+
+
 ##### `atTimestamp`<sup>Optional</sup> <a name="atTimestamp" id="cdk-self-destruct.ScheduledTriggerOptions.property.atTimestamp"></a>
 
 ```typescript
@@ -457,11 +468,20 @@ public readonly atTimestamp: number;
 
 - *Type:* number
 
-The timestamp at which the stack should be deleted. Must be a unix timestamp in milliseconds.
+The timestamp at which the stack should be deleted.
+
+Must be a unix timestamp in milliseconds. **Timezone must be UTC**
 
 Cannot be used together with `afterDuration`.
 
 ---
+
+*Example*
+
+```typescript
+new Date("2023-01-01T00:00:00Z").getTime()
+```
+
 
 ### SelfDestructProps <a name="SelfDestructProps" id="cdk-self-destruct.SelfDestructProps"></a>
 
