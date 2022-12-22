@@ -133,6 +133,52 @@ Whether the resource's removal policy should be set to DESTROY.q.
 
 ---
 
+### DefaultBehavior <a name="DefaultBehavior" id="cdk-self-destruct.DefaultBehavior"></a>
+
+#### Initializer <a name="Initializer" id="cdk-self-destruct.DefaultBehavior.Initializer"></a>
+
+```typescript
+import { DefaultBehavior } from 'cdk-self-destruct'
+
+const defaultBehavior: DefaultBehavior = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#cdk-self-destruct.DefaultBehavior.property.destoryAllResources">destoryAllResources</a></code> | <code>boolean</code> | Whether to set the removal policy of all resources that are not additionally specified to DESTROY. |
+| <code><a href="#cdk-self-destruct.DefaultBehavior.property.purgeResourceDependencies">purgeResourceDependencies</a></code> | <code>boolean</code> | Whether to destroy all data that a resource depends on. |
+
+---
+
+##### `destoryAllResources`<sup>Required</sup> <a name="destoryAllResources" id="cdk-self-destruct.DefaultBehavior.property.destoryAllResources"></a>
+
+```typescript
+public readonly destoryAllResources: boolean;
+```
+
+- *Type:* boolean
+
+Whether to set the removal policy of all resources that are not additionally specified to DESTROY.
+
+---
+
+##### `purgeResourceDependencies`<sup>Required</sup> <a name="purgeResourceDependencies" id="cdk-self-destruct.DefaultBehavior.property.purgeResourceDependencies"></a>
+
+```typescript
+public readonly purgeResourceDependencies: boolean;
+```
+
+- *Type:* boolean
+
+Whether to destroy all data that a resource depends on.
+
+For example, if a bucket has objects in it, it cannot be deleted.
+Running step functions will also prevent the stack from being deleted.
+
+---
+
 ### FunctionUrlConfig <a name="FunctionUrlConfig" id="cdk-self-destruct.FunctionUrlConfig"></a>
 
 #### Initializer <a name="Initializer" id="cdk-self-destruct.FunctionUrlConfig.Initializer"></a>
@@ -147,8 +193,9 @@ const functionUrlConfig: FunctionUrlConfig = { ... }
 
 | **Name** | **Type** | **Description** |
 | --- | --- | --- |
-| <code><a href="#cdk-self-destruct.FunctionUrlConfig.property.enabled">enabled</a></code> | <code>boolean</code> | *No description.* |
-| <code><a href="#cdk-self-destruct.FunctionUrlConfig.property.options">options</a></code> | <code>aws-cdk-lib.aws_lambda.FunctionUrlOptions</code> | *No description.* |
+| <code><a href="#cdk-self-destruct.FunctionUrlConfig.property.enabled">enabled</a></code> | <code>boolean</code> | Whether to enable the function url for the stack deletion lambda. |
+| <code><a href="#cdk-self-destruct.FunctionUrlConfig.property.cloudformationOutput">cloudformationOutput</a></code> | <code><a href="#cdk-self-destruct.FunctionUrlOutputProps">FunctionUrlOutputProps</a></code> | Options to add a cloudformation output to the stack. |
+| <code><a href="#cdk-self-destruct.FunctionUrlConfig.property.options">options</a></code> | <code>aws-cdk-lib.aws_lambda.FunctionUrlOptions</code> | Options to configure the function url. |
 
 ---
 
@@ -160,6 +207,20 @@ public readonly enabled: boolean;
 
 - *Type:* boolean
 
+Whether to enable the function url for the stack deletion lambda.
+
+---
+
+##### `cloudformationOutput`<sup>Optional</sup> <a name="cloudformationOutput" id="cdk-self-destruct.FunctionUrlConfig.property.cloudformationOutput"></a>
+
+```typescript
+public readonly cloudformationOutput: FunctionUrlOutputProps;
+```
+
+- *Type:* <a href="#cdk-self-destruct.FunctionUrlOutputProps">FunctionUrlOutputProps</a>
+
+Options to add a cloudformation output to the stack.
+
 ---
 
 ##### `options`<sup>Optional</sup> <a name="options" id="cdk-self-destruct.FunctionUrlConfig.property.options"></a>
@@ -169,6 +230,76 @@ public readonly options: FunctionUrlOptions;
 ```
 
 - *Type:* aws-cdk-lib.aws_lambda.FunctionUrlOptions
+
+Options to configure the function url.
+
+Can be used to add authentication.
+
+---
+
+### FunctionUrlOutputProps <a name="FunctionUrlOutputProps" id="cdk-self-destruct.FunctionUrlOutputProps"></a>
+
+#### Initializer <a name="Initializer" id="cdk-self-destruct.FunctionUrlOutputProps.Initializer"></a>
+
+```typescript
+import { FunctionUrlOutputProps } from 'cdk-self-destruct'
+
+const functionUrlOutputProps: FunctionUrlOutputProps = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#cdk-self-destruct.FunctionUrlOutputProps.property.condition">condition</a></code> | <code>aws-cdk-lib.CfnCondition</code> | A condition to associate with this output value. |
+| <code><a href="#cdk-self-destruct.FunctionUrlOutputProps.property.description">description</a></code> | <code>string</code> | A String type that describes the output value. |
+| <code><a href="#cdk-self-destruct.FunctionUrlOutputProps.property.exportName">exportName</a></code> | <code>string</code> | The name used to export the value of this output across stacks. |
+
+---
+
+##### `condition`<sup>Optional</sup> <a name="condition" id="cdk-self-destruct.FunctionUrlOutputProps.property.condition"></a>
+
+```typescript
+public readonly condition: CfnCondition;
+```
+
+- *Type:* aws-cdk-lib.CfnCondition
+- *Default:* No condition is associated with the output.
+
+A condition to associate with this output value.
+
+If the condition evaluates
+to `false`, this output value will not be included in the stack.
+
+---
+
+##### `description`<sup>Optional</sup> <a name="description" id="cdk-self-destruct.FunctionUrlOutputProps.property.description"></a>
+
+```typescript
+public readonly description: string;
+```
+
+- *Type:* string
+- *Default:* No description.
+
+A String type that describes the output value.
+
+The description can be a maximum of 4 K in length.
+
+---
+
+##### `exportName`<sup>Optional</sup> <a name="exportName" id="cdk-self-destruct.FunctionUrlOutputProps.property.exportName"></a>
+
+```typescript
+public readonly exportName: string;
+```
+
+- *Type:* string
+- *Default:* the output is not exported
+
+The name used to export the value of this output across stacks.
+
+To import the value from another stack, use `Fn.importValue(exportName)`.
 
 ---
 
@@ -217,6 +348,64 @@ This is mandatory if the bucket is not empty.
 
 ---
 
+### ScheduledTriggerOptions <a name="ScheduledTriggerOptions" id="cdk-self-destruct.ScheduledTriggerOptions"></a>
+
+#### Initializer <a name="Initializer" id="cdk-self-destruct.ScheduledTriggerOptions.Initializer"></a>
+
+```typescript
+import { ScheduledTriggerOptions } from 'cdk-self-destruct'
+
+const scheduledTriggerOptions: ScheduledTriggerOptions = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#cdk-self-destruct.ScheduledTriggerOptions.property.enabled">enabled</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#cdk-self-destruct.ScheduledTriggerOptions.property.afterDuration">afterDuration</a></code> | <code>aws-cdk-lib.Duration</code> | The duration after starting the deployment after which the stack should be deleted. |
+| <code><a href="#cdk-self-destruct.ScheduledTriggerOptions.property.atTimestamp">atTimestamp</a></code> | <code>number</code> | The timestamp at which the stack should be deleted. Must be a unix timestamp in milliseconds. |
+
+---
+
+##### `enabled`<sup>Required</sup> <a name="enabled" id="cdk-self-destruct.ScheduledTriggerOptions.property.enabled"></a>
+
+```typescript
+public readonly enabled: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `afterDuration`<sup>Optional</sup> <a name="afterDuration" id="cdk-self-destruct.ScheduledTriggerOptions.property.afterDuration"></a>
+
+```typescript
+public readonly afterDuration: Duration;
+```
+
+- *Type:* aws-cdk-lib.Duration
+
+The duration after starting the deployment after which the stack should be deleted.
+
+Cannot be used together with `atTimestamp`.
+
+---
+
+##### `atTimestamp`<sup>Optional</sup> <a name="atTimestamp" id="cdk-self-destruct.ScheduledTriggerOptions.property.atTimestamp"></a>
+
+```typescript
+public readonly atTimestamp: number;
+```
+
+- *Type:* number
+
+The timestamp at which the stack should be deleted. Must be a unix timestamp in milliseconds.
+
+Cannot be used together with `afterDuration`.
+
+---
+
 ### SelfDestructProps <a name="SelfDestructProps" id="cdk-self-destruct.SelfDestructProps"></a>
 
 #### Initializer <a name="Initializer" id="cdk-self-destruct.SelfDestructProps.Initializer"></a>
@@ -231,8 +420,7 @@ const selfDestructProps: SelfDestructProps = { ... }
 
 | **Name** | **Type** | **Description** |
 | --- | --- | --- |
-| <code><a href="#cdk-self-destruct.SelfDestructProps.property.defaultDestoryAllResources">defaultDestoryAllResources</a></code> | <code>boolean</code> | Whether to set the removal policy of all resources that are not additionally specified to DESTROY. |
-| <code><a href="#cdk-self-destruct.SelfDestructProps.property.defaultPurgeResourceDependencies">defaultPurgeResourceDependencies</a></code> | <code>boolean</code> | Whether to destroy all data that a resource depends on. |
+| <code><a href="#cdk-self-destruct.SelfDestructProps.property.defaultBehavior">defaultBehavior</a></code> | <code><a href="#cdk-self-destruct.DefaultBehavior">DefaultBehavior</a></code> | *No description.* |
 | <code><a href="#cdk-self-destruct.SelfDestructProps.property.trigger">trigger</a></code> | <code><a href="#cdk-self-destruct.TriggerOptions">TriggerOptions</a></code> | *No description.* |
 | <code><a href="#cdk-self-destruct.SelfDestructProps.property.cognitoUserpools">cognitoUserpools</a></code> | <code><a href="#cdk-self-destruct.CommonOptions">CommonOptions</a></code> | *No description.* |
 | <code><a href="#cdk-self-destruct.SelfDestructProps.property.customResourceProviders">customResourceProviders</a></code> | <code><a href="#cdk-self-destruct.CommonOptions">CommonOptions</a></code> | *No description.* |
@@ -242,30 +430,13 @@ const selfDestructProps: SelfDestructProps = { ... }
 
 ---
 
-##### `defaultDestoryAllResources`<sup>Required</sup> <a name="defaultDestoryAllResources" id="cdk-self-destruct.SelfDestructProps.property.defaultDestoryAllResources"></a>
+##### `defaultBehavior`<sup>Required</sup> <a name="defaultBehavior" id="cdk-self-destruct.SelfDestructProps.property.defaultBehavior"></a>
 
 ```typescript
-public readonly defaultDestoryAllResources: boolean;
+public readonly defaultBehavior: DefaultBehavior;
 ```
 
-- *Type:* boolean
-
-Whether to set the removal policy of all resources that are not additionally specified to DESTROY.
-
----
-
-##### `defaultPurgeResourceDependencies`<sup>Required</sup> <a name="defaultPurgeResourceDependencies" id="cdk-self-destruct.SelfDestructProps.property.defaultPurgeResourceDependencies"></a>
-
-```typescript
-public readonly defaultPurgeResourceDependencies: boolean;
-```
-
-- *Type:* boolean
-
-Whether to destroy all data that a resource depends on.
-
-For example, if a bucket has objects in it, it cannot be deleted.
-Running step functions will also prevent the stack from being deleted.
+- *Type:* <a href="#cdk-self-destruct.DefaultBehavior">DefaultBehavior</a>
 
 ---
 
@@ -389,6 +560,7 @@ const triggerOptions: TriggerOptions = { ... }
 | **Name** | **Type** | **Description** |
 | --- | --- | --- |
 | <code><a href="#cdk-self-destruct.TriggerOptions.property.addFunctionUrl">addFunctionUrl</a></code> | <code><a href="#cdk-self-destruct.FunctionUrlConfig">FunctionUrlConfig</a></code> | Use the lambda's function url to trigger the stack deletion. |
+| <code><a href="#cdk-self-destruct.TriggerOptions.property.scheduled">scheduled</a></code> | <code><a href="#cdk-self-destruct.ScheduledTriggerOptions">ScheduledTriggerOptions</a></code> | Create an eventbridge schedule to trigger the stack deletion. |
 
 ---
 
@@ -402,7 +574,19 @@ public readonly addFunctionUrl: FunctionUrlConfig;
 
 Use the lambda's function url to trigger the stack deletion.
 
-This will add a cloudformation output to the stack.
+This will add an output called `SelfDestructFunctionUrl` to the stack.
+
+---
+
+##### `scheduled`<sup>Optional</sup> <a name="scheduled" id="cdk-self-destruct.TriggerOptions.property.scheduled"></a>
+
+```typescript
+public readonly scheduled: ScheduledTriggerOptions;
+```
+
+- *Type:* <a href="#cdk-self-destruct.ScheduledTriggerOptions">ScheduledTriggerOptions</a>
+
+Create an eventbridge schedule to trigger the stack deletion.
 
 ---
 

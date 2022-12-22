@@ -1,5 +1,6 @@
 import {
   App,
+  Duration,
   Stack,
   aws_cognito,
   aws_dynamodb,
@@ -7,7 +8,7 @@ import {
   aws_stepfunctions,
 } from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
-import { SelfDestruct } from '../src/index';
+import { SelfDestruct, SelfDestructProps } from '../src/index';
 
 const blankApp = new App();
 const blankStack = new Stack(blankApp);
@@ -26,12 +27,21 @@ new aws_dynamodb.Table(demoStack, 'TestTable', {
 
 new aws_s3.Bucket(demoStack, 'TestBucket', {});
 
-const selfDestructProps = {
-  defaultDestoryAllResources: true,
-  defaultPurgeResourceDependencies: true,
+const selfDestructProps: SelfDestructProps = {
+  defaultBehavior: {
+    destoryAllResources: true,
+    purgeResourceDependencies: true,
+  },
   trigger: {
     addFunctionUrl: {
       enabled: true,
+      cloudformationOutput: {
+        exportName: 'SelfDestructUrl',
+      },
+    },
+    scheduled: {
+      enabled: true,
+      afterDuration: Duration.minutes(15),
     },
   },
 };
@@ -66,6 +76,20 @@ test('Stack destruction lambda function is be configured with properties and exe
 
   blankTemplate.hasResourceProperties('AWS::IAM::Role', properties);
   demoTemplate.hasResourceProperties('AWS::IAM::Role', properties);
+});
+
+test('Stack includes output for functionUrl', () => {
+  blankTemplate.hasOutput('SelfDestructFunctionUrl', {
+    Export: { Name: 'SelfDestructUrl' },
+  });
+});
+
+test('Stack includes EventBridge Schedule to delete the stack automatically', () => {
+  blankTemplate.hasResourceProperties('AWS::Scheduler::Schedule', {
+    FlexibleTimeWindow: {
+      Mode: 'OFF',
+    },
+  });
 });
 
 test('Includes a s3 bucket with a deletionPolicy set to delete', () => {

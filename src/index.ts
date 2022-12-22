@@ -1,4 +1,3 @@
-import * as path from 'path';
 import {
   aws_iam,
   aws_lambda_nodejs, Stack,
@@ -11,10 +10,10 @@ import {
   aws_lambda,
   Duration,
   aws_scheduler,
+  CfnCondition,
 } from 'aws-cdk-lib';
 import { CfnUserPool } from 'aws-cdk-lib/aws-cognito';
 import { CfnTable as CfnDynamoTable } from 'aws-cdk-lib/aws-dynamodb';
-// import { FunctionUrlOptions } from 'aws-cdk-lib/aws-lambda';
 import { FunctionUrlOptions } from 'aws-cdk-lib/aws-lambda';
 import { CfnBucket } from 'aws-cdk-lib/aws-s3';
 import { CfnStateMachine } from 'aws-cdk-lib/aws-stepfunctions';
@@ -43,31 +42,90 @@ export interface StepFunctionsOptions extends CommonOptions {
   readonly cancelRunningExecutions: boolean;
 }
 
+export interface FunctionUrlOutputProps {
+  /**
+     * A String type that describes the output value.
+     * The description can be a maximum of 4 K in length.
+     *
+     * @default - No description.
+     */
+  readonly description?: string;
+  /**
+     * The name used to export the value of this output across stacks.
+     *
+     * To import the value from another stack, use `Fn.importValue(exportName)`.
+     *
+     * @default - the output is not exported
+     */
+  readonly exportName?: string;
+  /**
+     * A condition to associate with this output value. If the condition evaluates
+     * to `false`, this output value will not be included in the stack.
+     *
+     * @default - No condition is associated with the output.
+     */
+  readonly condition?: CfnCondition;
+}
+
 export interface FunctionUrlConfig {
+  /**
+   * Whether to enable the function url for the stack deletion lambda.
+   */
   readonly enabled: boolean;
+  /**
+   * Options to configure the function url. Can be used to add authentication.
+   */
   readonly options?: FunctionUrlOptions;
+  /**
+   * Options to add a cloudformation output to the stack.
+   */
+  readonly cloudformationOutput?: FunctionUrlOutputProps;
+}
+
+export interface ScheduledTriggerOptions {
+  readonly enabled: boolean;
+  /**
+   * The duration after starting the deployment after which the stack should be deleted.
+   *
+   * Cannot be used together with `atTimestamp`.
+   */
+  readonly afterDuration?: Duration;
+  /**
+   * The timestamp at which the stack should be deleted. Must be a unix timestamp in milliseconds.
+   *
+   * Cannot be used together with `afterDuration`.
+   */
+  readonly atTimestamp?: number;
 }
 
 export interface TriggerOptions {
   /**
      * Use the lambda's function url to trigger the stack deletion.
-     * This will add a cloudformation output to the stack.
+     * This will add an output called `SelfDestructFunctionUrl` to the stack.
      */
   readonly addFunctionUrl?: FunctionUrlConfig;
+  /**
+   * Create an eventbridge schedule to trigger the stack deletion.
+   */
+  readonly scheduled?: ScheduledTriggerOptions;
 };
 
-export interface SelfDestructProps {
+export interface DefaultBehavior {
   /**
    * Whether to set the removal policy of all resources that are not additionally specified to DESTROY
    */
-  readonly defaultDestoryAllResources: boolean;
+  readonly destoryAllResources: boolean;
   /**
    * Whether to destroy all data that a resource depends on.
    *
    * For example, if a bucket has objects in it, it cannot be deleted.
    * Running step functions will also prevent the stack from being deleted.
    */
-  readonly defaultPurgeResourceDependencies: boolean;
+  readonly purgeResourceDependencies: boolean;
+}
+
+export interface SelfDestructProps {
+  readonly defaultBehavior: DefaultBehavior;
   readonly cognitoUserpools?: CommonOptions;
   readonly customResourceProviders?: CommonOptions;
   readonly dynamodb?: CommonOptions;
@@ -115,7 +173,7 @@ export class SelfDestructAspect implements IAspect {
     const {
       s3Buckets,
       cognitoUserpools,
-      defaultDestoryAllResources: all,
+      defaultBehavior: { destoryAllResources: all },
     } = this.settings;
     if (node instanceof CfnBucket && shouldDestroy(s3Buckets?.enabled, all)) {
       this.buckets.push(node);
@@ -164,7 +222,7 @@ export class SelfDestructAspect implements IAspect {
     const STATE_MACHINES = this.stateMachines.map(({ ref }) => ref).join(';');
 
 
-    const { defaultPurgeResourceDependencies: all } = this.settings;
+    const { defaultBehavior: { purgeResourceDependencies: all } } = this.settings;
 
     const environment = {
       S3_BUCKETS: shouldDestroy( this.settings.s3Buckets?.purgeNonEmptyBuckets, all)
@@ -181,26 +239,54 @@ export class SelfDestructAspect implements IAspect {
   private readonly createDestructionLambda = () => {
     const handler = new aws_lambda_nodejs.NodejsFunction(
       this.scope,
-      'Default',
+      'handler',
       {
-        entry: path.join(__dirname, './functions/self-destruct-handler.ts'),
         environment: this.getEnvironmentVariables(),
         memorySize: 512,
         timeout: Duration.minutes(15),
         runtime: aws_lambda.Runtime.NODEJS_16_X,
+        functionName: `${Stack.of(this.scope).stackName}-SelfDestructHandler`,
+        description: 'Destroy cloudfomration stack: ' + Stack.of(this.scope).stackName,
       },
     );
 
+    const { addFunctionUrl } = this.settings.trigger;
+
     if (this.settings.trigger.addFunctionUrl?.enabled) {
-      const functionUrl = handler.addFunctionUrl();
-      new CfnOutput(this.scope, 'SelfDestructFunctionUrl', {
-        value: functionUrl.url,
-        exportName: 'SelfDestructFunctionUrl',
-      });
+      const functionUrl = handler.addFunctionUrl(this.settings.trigger.addFunctionUrl.options);
+
+      if (addFunctionUrl?.cloudformationOutput) {
+        new CfnOutput(this.scope, 'SelfDestructFunctionUrl', {
+          value: functionUrl.url,
+          ...addFunctionUrl.cloudformationOutput,
+        });
+      }
     }
 
-    if (this.settings.trigger) {
-      const targetDate = new Date();
+    if (this.settings.trigger.scheduled?.enabled) {
+
+      const { scheduled } = this.settings.trigger;
+
+      let targetDate = new Date();
+
+      if (scheduled.atTimestamp && scheduled.afterDuration) {
+        throw new Error('Cannot set both atTimestamp and afterDuration');
+      }
+
+      if (!scheduled.afterDuration && !scheduled.atTimestamp) {
+        throw new Error('Must set either atTimestamp or afterDuration');
+      }
+
+      if (scheduled.afterDuration) {
+        const x = scheduled.afterDuration.toMilliseconds();
+        targetDate = new Date( targetDate.setTime(targetDate.getTime() + x));
+      } else if (scheduled.atTimestamp) {
+        if (scheduled.atTimestamp < Date.now()) {
+          throw new Error('atTimestamp must be in the future');
+        }
+        targetDate = new Date(scheduled.atTimestamp);
+      }
+
       const scheduleExpression = `at(${targetDate.toISOString().substring(0, 19)})`;
 
       const role = new aws_iam.Role(this.scope, 'ScheduleExecutionRole', {
@@ -224,17 +310,14 @@ export class SelfDestructAspect implements IAspect {
       });
 
       new aws_scheduler.CfnSchedule(this.scope, 'Schedule', {
-        flexibleTimeWindow: { mode: 'Off' },
-        description: 'Self Destruct Stack "' + Stack.of(this.scope).stackName + '" at ' + targetDate.toISOString().substring(0, 19),
+        flexibleTimeWindow: { mode: 'OFF' },
+        description: 'Self Destruct Stack "' + Stack.of(this.scope).stackName + '" at ' + targetDate.toLocaleString().substring(0, 17),
         scheduleExpression,
         target: { arn: handler.functionArn, roleArn: role.roleArn },
-        name: 'Destroy Stack ' + Stack.of(this.scope).stackName,
+        name: ('Destroy Stack ' + Stack.of(this.scope).stackName).replace(/\s/g, '_').substring(0, 64),
       });
     }
 
-    // new aws_events.Rule(this.scope, 'SelfDestructRule', {
-    //   schedule: this.settings.schedule,
-    // });
 
     handler.addToRolePolicy(new aws_iam.PolicyStatement({
       actions: ['cloudformation:DeleteStack'],

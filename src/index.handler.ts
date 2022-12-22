@@ -62,20 +62,30 @@ const stopAllExecutions = async (stateMachineArn: string) => {
   } while (response?.nextToken);
 };
 
-export const handler = async () => {
+export const handler = async (_event: unknown, _context: unknown, callback: (error: unknown, response: Record<string, unknown>) => void) => {
   const { STACK_NAME, S3_BUCKETS, STATE_MACHINES } = process.env;
 
-  const s3Buckets = S3_BUCKETS?.split(';') ?? [];
-  const stateMachines = STATE_MACHINES?.split(';') ?? [];
+  const s3Buckets = S3_BUCKETS?.split(';') || [];
+  const stateMachines = STATE_MACHINES?.split(';') || [];
 
   const promises: Array<Promise<unknown>> = [];
 
   for (const bucketName of s3Buckets) {
-    promises.push(purgeS3Bucket(bucketName));
+    if (bucketName) {
+      console.log('Purging S3 bucket: ' + bucketName);
+      promises.push(purgeS3Bucket(bucketName));
+    }
   }
 
   for (const stateMachineArn of stateMachines) {
-    promises.push(stopAllExecutions(stateMachineArn));
+    if (stateMachineArn) {
+      console.log('Stopping Statemachine executions of: ' + stateMachineArn);
+      promises.push(stopAllExecutions(stateMachineArn));
+    }
+  }
+
+  if (STACK_NAME === undefined) {
+    throw new Error('STACK_NAME is not defined');
   }
 
   if (promises.length) {
@@ -84,11 +94,21 @@ export const handler = async () => {
     console.log('All promises resolved');
   }
 
-  if (STACK_NAME === undefined) {
-    throw new Error('STACK_NAME is not defined');
-  }
+  const timestamp = new Date().toISOString();
 
   await cf.deleteStack({ StackName: STACK_NAME }).promise();
 
-  console.log(`Started self destruct at ${new Date().toISOString()}`);
+  const message = `Started self destruct at ${timestamp}`;
+
+
+  console.log(message);
+
+  callback(null, {
+    statusCode: 201,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ message, stack: STACK_NAME, timestamp }, null, 2),
+    isBase64Encoded: false,
+  });
 };
