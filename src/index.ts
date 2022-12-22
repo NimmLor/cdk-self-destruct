@@ -3,7 +3,6 @@ import {
   aws_lambda_nodejs,
   Stack,
   CfnResource,
-  CfnCustomResource,
   IAspect,
   RemovalPolicy,
   Aspects,
@@ -13,8 +12,6 @@ import {
   aws_scheduler,
   CfnCondition,
 } from "aws-cdk-lib";
-import { CfnUserPool } from "aws-cdk-lib/aws-cognito";
-import { CfnTable as CfnDynamoTable } from "aws-cdk-lib/aws-dynamodb";
 import { FunctionUrlOptions } from "aws-cdk-lib/aws-lambda";
 import { CfnBucket } from "aws-cdk-lib/aws-s3";
 import { CfnStateMachine } from "aws-cdk-lib/aws-stepfunctions";
@@ -89,12 +86,16 @@ export interface ScheduledTriggerOptions {
    * The duration after starting the deployment after which the stack should be deleted.
    *
    * Cannot be used together with `atTimestamp`.
+   *
+   * @example Duration.days(1)
    */
   readonly afterDuration?: Duration;
   /**
-   * The timestamp at which the stack should be deleted. Must be a unix timestamp in milliseconds.
+   * The timestamp at which the stack should be deleted. Must be a unix timestamp in milliseconds. **Timezone must be UTC**
    *
    * Cannot be used together with `afterDuration`.
+   *
+   * @example new Date("2023-01-01T00:00:00Z").getTime()
    */
   readonly atTimestamp?: number;
 }
@@ -125,14 +126,48 @@ export interface DefaultBehavior {
   readonly purgeResourceDependencies: boolean;
 }
 
+export interface ByResourceOptions {
+  /**
+   * A list of cloudformation resources that should be destroyed.
+   *
+   * @see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html
+   *
+   * @example "AWS::DynamoDB::Table"
+   * @example "AWS::Cognito::UserPool"
+   */
+  readonly resourcesToDestroy?: string[];
+  /**
+   * A list of cloudformation resources that should be retained.
+   *
+   * @see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html
+   *
+   * @example "AWS::DynamoDB::Table"
+   * @example "AWS::Cognito::UserPool"
+   */
+  readonly resourcesToRetain?: string[];
+}
+
 export interface SelfDestructProps {
+  /**
+   * Options to configure if resources should be destroyed by default.
+   */
   readonly defaultBehavior: DefaultBehavior;
-  readonly cognitoUserpools?: CommonOptions;
-  readonly customResourceProviders?: CommonOptions;
-  readonly dynamodb?: CommonOptions;
+  /**
+   * Options to configure the s3 bucket destruction.
+   */
   readonly s3Buckets?: S3Options;
+  /**
+   * Options to configure the trigger of the stack destruction.
+   */
   readonly trigger: TriggerOptions;
+  /**
+   * Options to configure the step functions destruction.
+   */
   readonly stepFunctions?: StepFunctionsOptions;
+  /**
+   * Destroy/Retain resources by resource type.
+   */
+  readonly byResource?: ByResourceOptions;
 }
 
 const shouldDestroy = (value: boolean | undefined, defaultValue = false) => {
@@ -148,20 +183,11 @@ export class SelfDestructAspect implements IAspect {
 
   public readonly buckets: CfnBucket[] = [];
 
-  public readonly userpools: CfnUserPool[] = [];
-
-  public readonly dynamodbTables: CfnDynamoTable[] = [];
-
-  public readonly customResources: CfnCustomResource[] = [];
-
   public readonly stateMachines: CfnStateMachine[] = [];
 
   public readonly settings: SelfDestructProps;
 
   public destructionHandler: aws_lambda_nodejs.NodejsFunction;
-
-  public index = 0;
-
   public constructor(scope: Stack, props: SelfDestructProps) {
     this.scope = scope;
     this.settings = props;
@@ -170,32 +196,12 @@ export class SelfDestructAspect implements IAspect {
   }
 
   public visit(node: IConstruct): void {
-    this.index += 1;
     const {
       s3Buckets,
-      cognitoUserpools,
       defaultBehavior: { destoryAllResources: all },
     } = this.settings;
     if (node instanceof CfnBucket && shouldDestroy(s3Buckets?.enabled, all)) {
       this.buckets.push(node);
-      node.applyRemovalPolicy(RemovalPolicy.DESTROY);
-    } else if (
-      node instanceof CfnUserPool &&
-      shouldDestroy(cognitoUserpools?.enabled, all)
-    ) {
-      this.userpools.push(node);
-      node.applyRemovalPolicy(RemovalPolicy.DESTROY);
-    } else if (
-      node instanceof CfnDynamoTable &&
-      shouldDestroy(this.settings.dynamodb?.enabled, all)
-    ) {
-      this.dynamodbTables.push(node);
-      node.applyRemovalPolicy(RemovalPolicy.DESTROY);
-    } else if (
-      node instanceof CfnCustomResource &&
-      shouldDestroy(this.settings.customResourceProviders?.enabled, all)
-    ) {
-      this.customResources.push(node);
       node.applyRemovalPolicy(RemovalPolicy.DESTROY);
     } else if (node instanceof CfnStateMachine) {
       this.stateMachines.push(node);
@@ -206,7 +212,21 @@ export class SelfDestructAspect implements IAspect {
     ) {
       const att = node.getAtt("DeletionPolicy");
       if (att.displayName === "DeletionPolicy") {
-        node.applyRemovalPolicy(RemovalPolicy.DESTROY);
+        if (
+          !this.settings.byResource?.resourcesToRetain?.includes(
+            node.cfnResourceType
+          ) &&
+          shouldDestroy(
+            this.settings.byResource?.resourcesToDestroy?.includes(
+              node.cfnResourceType
+            ) === true
+              ? true
+              : undefined,
+            this.settings.defaultBehavior.destoryAllResources
+          )
+        ) {
+          node.applyRemovalPolicy(RemovalPolicy.DESTROY);
+        }
       }
     }
 

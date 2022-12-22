@@ -103,6 +103,63 @@ The tree node.
 
 ## Structs <a name="Structs" id="Structs"></a>
 
+### ByResourceOptions <a name="ByResourceOptions" id="cdk-self-destruct.ByResourceOptions"></a>
+
+#### Initializer <a name="Initializer" id="cdk-self-destruct.ByResourceOptions.Initializer"></a>
+
+```typescript
+import { ByResourceOptions } from 'cdk-self-destruct'
+
+const byResourceOptions: ByResourceOptions = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#cdk-self-destruct.ByResourceOptions.property.resourcesToDestroy">resourcesToDestroy</a></code> | <code>string[]</code> | A list of cloudformation resources that should be destroyed. |
+| <code><a href="#cdk-self-destruct.ByResourceOptions.property.resourcesToRetain">resourcesToRetain</a></code> | <code>string[]</code> | A list of cloudformation resources that should be retained. |
+
+---
+
+##### `resourcesToDestroy`<sup>Optional</sup> <a name="resourcesToDestroy" id="cdk-self-destruct.ByResourceOptions.property.resourcesToDestroy"></a>
+
+```typescript
+public readonly resourcesToDestroy: string[];
+```
+
+- *Type:* string[]
+
+A list of cloudformation resources that should be destroyed.
+
+---
+
+*Example*
+
+```typescript
+"AWS::Cognito::UserPool"
+```
+
+
+##### `resourcesToRetain`<sup>Optional</sup> <a name="resourcesToRetain" id="cdk-self-destruct.ByResourceOptions.property.resourcesToRetain"></a>
+
+```typescript
+public readonly resourcesToRetain: string[];
+```
+
+- *Type:* string[]
+
+A list of cloudformation resources that should be retained.
+
+---
+
+*Example*
+
+```typescript
+"AWS::Cognito::UserPool"
+```
+
+
 ### CommonOptions <a name="CommonOptions" id="cdk-self-destruct.CommonOptions"></a>
 
 #### Initializer <a name="Initializer" id="cdk-self-destruct.CommonOptions.Initializer"></a>
@@ -420,13 +477,11 @@ const selfDestructProps: SelfDestructProps = { ... }
 
 | **Name** | **Type** | **Description** |
 | --- | --- | --- |
-| <code><a href="#cdk-self-destruct.SelfDestructProps.property.defaultBehavior">defaultBehavior</a></code> | <code><a href="#cdk-self-destruct.DefaultBehavior">DefaultBehavior</a></code> | *No description.* |
-| <code><a href="#cdk-self-destruct.SelfDestructProps.property.trigger">trigger</a></code> | <code><a href="#cdk-self-destruct.TriggerOptions">TriggerOptions</a></code> | *No description.* |
-| <code><a href="#cdk-self-destruct.SelfDestructProps.property.cognitoUserpools">cognitoUserpools</a></code> | <code><a href="#cdk-self-destruct.CommonOptions">CommonOptions</a></code> | *No description.* |
-| <code><a href="#cdk-self-destruct.SelfDestructProps.property.customResourceProviders">customResourceProviders</a></code> | <code><a href="#cdk-self-destruct.CommonOptions">CommonOptions</a></code> | *No description.* |
-| <code><a href="#cdk-self-destruct.SelfDestructProps.property.dynamodb">dynamodb</a></code> | <code><a href="#cdk-self-destruct.CommonOptions">CommonOptions</a></code> | *No description.* |
-| <code><a href="#cdk-self-destruct.SelfDestructProps.property.s3Buckets">s3Buckets</a></code> | <code><a href="#cdk-self-destruct.S3Options">S3Options</a></code> | *No description.* |
-| <code><a href="#cdk-self-destruct.SelfDestructProps.property.stepFunctions">stepFunctions</a></code> | <code><a href="#cdk-self-destruct.StepFunctionsOptions">StepFunctionsOptions</a></code> | *No description.* |
+| <code><a href="#cdk-self-destruct.SelfDestructProps.property.defaultBehavior">defaultBehavior</a></code> | <code><a href="#cdk-self-destruct.DefaultBehavior">DefaultBehavior</a></code> | Options to configure if resources should be destroyed by default. |
+| <code><a href="#cdk-self-destruct.SelfDestructProps.property.trigger">trigger</a></code> | <code><a href="#cdk-self-destruct.TriggerOptions">TriggerOptions</a></code> | Options to configure the trigger of the stack destruction. |
+| <code><a href="#cdk-self-destruct.SelfDestructProps.property.byResource">byResource</a></code> | <code><a href="#cdk-self-destruct.ByResourceOptions">ByResourceOptions</a></code> | Destroy/Retain resources by resource type. |
+| <code><a href="#cdk-self-destruct.SelfDestructProps.property.s3Buckets">s3Buckets</a></code> | <code><a href="#cdk-self-destruct.S3Options">S3Options</a></code> | Options to configure the s3 bucket destruction. |
+| <code><a href="#cdk-self-destruct.SelfDestructProps.property.stepFunctions">stepFunctions</a></code> | <code><a href="#cdk-self-destruct.StepFunctionsOptions">StepFunctionsOptions</a></code> | Options to configure the step functions destruction. |
 
 ---
 
@@ -438,6 +493,8 @@ public readonly defaultBehavior: DefaultBehavior;
 
 - *Type:* <a href="#cdk-self-destruct.DefaultBehavior">DefaultBehavior</a>
 
+Options to configure if resources should be destroyed by default.
+
 ---
 
 ##### `trigger`<sup>Required</sup> <a name="trigger" id="cdk-self-destruct.SelfDestructProps.property.trigger"></a>
@@ -448,35 +505,19 @@ public readonly trigger: TriggerOptions;
 
 - *Type:* <a href="#cdk-self-destruct.TriggerOptions">TriggerOptions</a>
 
----
-
-##### `cognitoUserpools`<sup>Optional</sup> <a name="cognitoUserpools" id="cdk-self-destruct.SelfDestructProps.property.cognitoUserpools"></a>
-
-```typescript
-public readonly cognitoUserpools: CommonOptions;
-```
-
-- *Type:* <a href="#cdk-self-destruct.CommonOptions">CommonOptions</a>
+Options to configure the trigger of the stack destruction.
 
 ---
 
-##### `customResourceProviders`<sup>Optional</sup> <a name="customResourceProviders" id="cdk-self-destruct.SelfDestructProps.property.customResourceProviders"></a>
+##### `byResource`<sup>Optional</sup> <a name="byResource" id="cdk-self-destruct.SelfDestructProps.property.byResource"></a>
 
 ```typescript
-public readonly customResourceProviders: CommonOptions;
+public readonly byResource: ByResourceOptions;
 ```
 
-- *Type:* <a href="#cdk-self-destruct.CommonOptions">CommonOptions</a>
+- *Type:* <a href="#cdk-self-destruct.ByResourceOptions">ByResourceOptions</a>
 
----
-
-##### `dynamodb`<sup>Optional</sup> <a name="dynamodb" id="cdk-self-destruct.SelfDestructProps.property.dynamodb"></a>
-
-```typescript
-public readonly dynamodb: CommonOptions;
-```
-
-- *Type:* <a href="#cdk-self-destruct.CommonOptions">CommonOptions</a>
+Destroy/Retain resources by resource type.
 
 ---
 
@@ -488,6 +529,8 @@ public readonly s3Buckets: S3Options;
 
 - *Type:* <a href="#cdk-self-destruct.S3Options">S3Options</a>
 
+Options to configure the s3 bucket destruction.
+
 ---
 
 ##### `stepFunctions`<sup>Optional</sup> <a name="stepFunctions" id="cdk-self-destruct.SelfDestructProps.property.stepFunctions"></a>
@@ -497,6 +540,8 @@ public readonly stepFunctions: StepFunctionsOptions;
 ```
 
 - *Type:* <a href="#cdk-self-destruct.StepFunctionsOptions">StepFunctionsOptions</a>
+
+Options to configure the step functions destruction.
 
 ---
 
@@ -651,14 +696,10 @@ All aspects can visit an IConstruct.
 | **Name** | **Type** | **Description** |
 | --- | --- | --- |
 | <code><a href="#cdk-self-destruct.SelfDestructAspect.property.buckets">buckets</a></code> | <code>aws-cdk-lib.aws_s3.CfnBucket[]</code> | *No description.* |
-| <code><a href="#cdk-self-destruct.SelfDestructAspect.property.customResources">customResources</a></code> | <code>aws-cdk-lib.CfnCustomResource[]</code> | *No description.* |
-| <code><a href="#cdk-self-destruct.SelfDestructAspect.property.dynamodbTables">dynamodbTables</a></code> | <code>aws-cdk-lib.aws_dynamodb.CfnTable[]</code> | *No description.* |
 | <code><a href="#cdk-self-destruct.SelfDestructAspect.property.scope">scope</a></code> | <code>aws-cdk-lib.Stack</code> | *No description.* |
 | <code><a href="#cdk-self-destruct.SelfDestructAspect.property.settings">settings</a></code> | <code><a href="#cdk-self-destruct.SelfDestructProps">SelfDestructProps</a></code> | *No description.* |
 | <code><a href="#cdk-self-destruct.SelfDestructAspect.property.stateMachines">stateMachines</a></code> | <code>aws-cdk-lib.aws_stepfunctions.CfnStateMachine[]</code> | *No description.* |
-| <code><a href="#cdk-self-destruct.SelfDestructAspect.property.userpools">userpools</a></code> | <code>aws-cdk-lib.aws_cognito.CfnUserPool[]</code> | *No description.* |
 | <code><a href="#cdk-self-destruct.SelfDestructAspect.property.destructionHandler">destructionHandler</a></code> | <code>aws-cdk-lib.aws_lambda_nodejs.NodejsFunction</code> | *No description.* |
-| <code><a href="#cdk-self-destruct.SelfDestructAspect.property.index">index</a></code> | <code>number</code> | *No description.* |
 
 ---
 
@@ -669,26 +710,6 @@ public readonly buckets: CfnBucket[];
 ```
 
 - *Type:* aws-cdk-lib.aws_s3.CfnBucket[]
-
----
-
-##### `customResources`<sup>Required</sup> <a name="customResources" id="cdk-self-destruct.SelfDestructAspect.property.customResources"></a>
-
-```typescript
-public readonly customResources: CfnCustomResource[];
-```
-
-- *Type:* aws-cdk-lib.CfnCustomResource[]
-
----
-
-##### `dynamodbTables`<sup>Required</sup> <a name="dynamodbTables" id="cdk-self-destruct.SelfDestructAspect.property.dynamodbTables"></a>
-
-```typescript
-public readonly dynamodbTables: CfnTable[];
-```
-
-- *Type:* aws-cdk-lib.aws_dynamodb.CfnTable[]
 
 ---
 
@@ -722,16 +743,6 @@ public readonly stateMachines: CfnStateMachine[];
 
 ---
 
-##### `userpools`<sup>Required</sup> <a name="userpools" id="cdk-self-destruct.SelfDestructAspect.property.userpools"></a>
-
-```typescript
-public readonly userpools: CfnUserPool[];
-```
-
-- *Type:* aws-cdk-lib.aws_cognito.CfnUserPool[]
-
----
-
 ##### `destructionHandler`<sup>Required</sup> <a name="destructionHandler" id="cdk-self-destruct.SelfDestructAspect.property.destructionHandler"></a>
 
 ```typescript
@@ -739,16 +750,6 @@ public readonly destructionHandler: NodejsFunction;
 ```
 
 - *Type:* aws-cdk-lib.aws_lambda_nodejs.NodejsFunction
-
----
-
-##### `index`<sup>Required</sup> <a name="index" id="cdk-self-destruct.SelfDestructAspect.property.index"></a>
-
-```typescript
-public readonly index: number;
-```
-
-- *Type:* number
 
 ---
 

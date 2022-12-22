@@ -25,11 +25,12 @@ new aws_dynamodb.Table(demoStack, "TestTable", {
   partitionKey: { name: "id", type: aws_dynamodb.AttributeType.STRING },
 });
 
+new aws_s3.Bucket(blankStack, "TestBucket", {});
 new aws_s3.Bucket(demoStack, "TestBucket", {});
 
 const selfDestructProps: SelfDestructProps = {
   defaultBehavior: {
-    destoryAllResources: true,
+    destoryAllResources: false,
     purgeResourceDependencies: true,
   },
   trigger: {
@@ -43,6 +44,10 @@ const selfDestructProps: SelfDestructProps = {
       enabled: true,
       afterDuration: Duration.minutes(15),
     },
+  },
+  byResource: {
+    resourcesToDestroy: ["AWS::S3::Bucket"],
+    resourcesToRetain: ["AWS::DynamoDB::Table"],
   },
 };
 new SelfDestruct(blankStack, "SelfDestruct", selfDestructProps);
@@ -93,19 +98,22 @@ test("Stack includes EventBridge Schedule to delete the stack automatically", ()
 });
 
 test("Includes a s3 bucket with a deletionPolicy set to delete", () => {
+  blankTemplate.hasResource("AWS::S3::Bucket", {
+    DeletionPolicy: "Delete",
+  });
   demoTemplate.hasResource("AWS::S3::Bucket", {
     DeletionPolicy: "Delete",
   });
 });
 
-test("Includes a cognito userpool with a deletionPolicy set to delete", () => {
+test("Ignores a cognito userpool with a deletionPolicy set to retain", () => {
   demoTemplate.hasResource("AWS::Cognito::UserPool", {
-    DeletionPolicy: "Delete",
+    DeletionPolicy: "Retain",
   });
 });
 
 test("Includes a dynamodb table with a deletionPolicy set to delete", () => {
   demoTemplate.hasResource("AWS::DynamoDB::Table", {
-    DeletionPolicy: "Delete",
+    DeletionPolicy: "Retain",
   });
 });
