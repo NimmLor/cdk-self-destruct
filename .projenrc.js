@@ -20,5 +20,6 @@ const project = new awscdk.AwsCdkConstructLibrary({
   jestOptions: {
     extraCliOptions: ['--testMatch "**/(test|src)/**/*(*.)@(spec|test).ts?(x)"'],
   },
+  gitignore: ['cdk.out'],
 });
 project.synth();
