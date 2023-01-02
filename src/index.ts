@@ -12,7 +12,7 @@ import {
   aws_scheduler,
   CfnCondition,
 } from "aws-cdk-lib";
-import { FunctionUrlOptions } from "aws-cdk-lib/aws-lambda";
+import { FunctionUrlOptions, CfnFunction } from "aws-cdk-lib/aws-lambda";
 import { CfnBucket } from "aws-cdk-lib/aws-s3";
 import { CfnStateMachine } from "aws-cdk-lib/aws-stepfunctions";
 import { Construct, IConstruct } from "constructs";
@@ -124,6 +124,23 @@ export interface DefaultBehavior {
    * Running step functions will also prevent the stack from being deleted.
    */
   readonly purgeResourceDependencies: boolean;
+
+  /**
+   * Whether to destroy additional resources by default that are not automattically removed by cloudformation specified.
+   *
+   * At this time this only includes cloudwatch log groups linked to aws lambda functions.
+   */
+  readonly performAllAdditionalCleanup?: boolean;
+}
+
+export interface AdditionalCleanupOptions {
+  /**
+   * Whether to destroy all cloudwatch log groups linked to aws lambda functions.
+   *
+   * This does not affect log groups specified in the cloudformation template,
+   * only the ones that are automatically created by the lambda service.
+   */
+  readonly cleanupLambdaLogGroups: boolean;
 }
 
 export interface ByResourceOptions {
@@ -168,6 +185,11 @@ export interface SelfDestructProps {
    * Destroy/Retain resources by resource type.
    */
   readonly byResource?: ByResourceOptions;
+
+  /**
+   * Additional cleanup for resources not specified in the cloudformation template.
+   */
+  readonly additionalCleanup?: AdditionalCleanupOptions;
 }
 
 const shouldDestroy = (value: boolean | undefined, defaultValue = false) => {
@@ -184,6 +206,8 @@ export class SelfDestructAspect implements IAspect {
   public readonly buckets: CfnBucket[] = [];
 
   public readonly stateMachines: CfnStateMachine[] = [];
+
+  public readonly lambdaFunctions: CfnFunction[] = [];
 
   public readonly settings: SelfDestructProps;
 
@@ -205,6 +229,12 @@ export class SelfDestructAspect implements IAspect {
       node.applyRemovalPolicy(RemovalPolicy.DESTROY);
     } else if (node instanceof CfnStateMachine) {
       this.stateMachines.push(node);
+    } else if (
+      node instanceof CfnFunction &&
+      node.functionName !==
+        `${Stack.of(this.scope).stackName}-SelfDestructHandler`
+    ) {
+      this.lambdaFunctions.push(node);
     } else if (
       node instanceof CfnResource &&
       "applyRemovalPolicy" in node &&
@@ -260,6 +290,12 @@ export class SelfDestructAspect implements IAspect {
       )
         ? STATE_MACHINES
         : "",
+      LOG_GROUPS: shouldDestroy(
+        this.settings.additionalCleanup?.cleanupLambdaLogGroups,
+        this.settings.defaultBehavior.performAllAdditionalCleanup
+      )
+        ? this.lambdaFunctions.map(({ ref }) => `/aws/lambda/${ref}`).join(";")
+        : "",
     };
     return environment;
   };
@@ -275,7 +311,7 @@ export class SelfDestructAspect implements IAspect {
         runtime: aws_lambda.Runtime.NODEJS_16_X,
         functionName: `${Stack.of(this.scope).stackName}-SelfDestructHandler`,
         description:
-          "Destroy cloudfomration stack: " + Stack.of(this.scope).stackName,
+          "Destroy cloudformation stack: " + Stack.of(this.scope).stackName,
       }
     );
 
@@ -374,6 +410,17 @@ export class SelfDestructAspect implements IAspect {
       new aws_iam.PolicyStatement({
         actions: ["states:ListExecutions", "states:StopExecution"],
         resources: ["*"],
+      })
+    );
+
+    handler.addToRolePolicy(
+      new aws_iam.PolicyStatement({
+        actions: ["logs:DeleteLogGroup"],
+        resources: [
+          `arn:aws:logs:${Stack.of(this.scope).region}:${
+            Stack.of(this.scope).account
+          }:log-group:*`,
+        ],
       })
     );
 

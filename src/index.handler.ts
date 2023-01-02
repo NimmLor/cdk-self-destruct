@@ -1,9 +1,10 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { CloudFormation, S3, StepFunctions } from "aws-sdk";
+import { CloudFormation, S3, StepFunctions, CloudWatchLogs } from "aws-sdk";
 
 const cf = new CloudFormation({ apiVersion: "2010-05-15" });
 const s3 = new S3({ apiVersion: "2006-03-01" });
 const stepFunctions = new StepFunctions({ apiVersion: "2016-11-23" });
+const cwl = new CloudWatchLogs({ apiVersion: "2014-03-28" });
 
 /**
  * Purge all objects from an S3 bucket
@@ -62,15 +63,20 @@ const stopAllExecutions = async (stateMachineArn: string) => {
   } while (response?.nextToken);
 };
 
+const deleteLogGroup = async (logGroupName: string) => {
+  return cwl.deleteLogGroup({ logGroupName }).promise();
+};
+
 export const handler = async (
   _event: unknown,
   _context: unknown,
   callback: (error: unknown, response: Record<string, unknown>) => void
 ) => {
-  const { STACK_NAME, S3_BUCKETS, STATE_MACHINES } = process.env;
+  const { STACK_NAME, S3_BUCKETS, STATE_MACHINES, LOG_GROUPS } = process.env;
 
   const s3Buckets = S3_BUCKETS?.split(";") || [];
   const stateMachines = STATE_MACHINES?.split(";") || [];
+  const logGroups = LOG_GROUPS?.split(";") || [];
 
   const promises: Array<Promise<unknown>> = [];
 
@@ -85,6 +91,13 @@ export const handler = async (
     if (stateMachineArn) {
       console.log("Stopping Statemachine executions of: " + stateMachineArn);
       promises.push(stopAllExecutions(stateMachineArn));
+    }
+  }
+
+  for (const logGroup of logGroups) {
+    if (logGroups) {
+      console.log("Deleting log group: " + logGroup);
+      promises.push(deleteLogGroup(logGroup));
     }
   }
 

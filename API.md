@@ -103,6 +103,39 @@ The tree node.
 
 ## Structs <a name="Structs" id="Structs"></a>
 
+### AdditionalCleanupOptions <a name="AdditionalCleanupOptions" id="cdk-self-destruct.AdditionalCleanupOptions"></a>
+
+#### Initializer <a name="Initializer" id="cdk-self-destruct.AdditionalCleanupOptions.Initializer"></a>
+
+```typescript
+import { AdditionalCleanupOptions } from 'cdk-self-destruct'
+
+const additionalCleanupOptions: AdditionalCleanupOptions = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#cdk-self-destruct.AdditionalCleanupOptions.property.cleanupLambdaLogGroups">cleanupLambdaLogGroups</a></code> | <code>boolean</code> | Whether to destroy all cloudwatch log groups linked to aws lambda functions. |
+
+---
+
+##### `cleanupLambdaLogGroups`<sup>Required</sup> <a name="cleanupLambdaLogGroups" id="cdk-self-destruct.AdditionalCleanupOptions.property.cleanupLambdaLogGroups"></a>
+
+```typescript
+public readonly cleanupLambdaLogGroups: boolean;
+```
+
+- *Type:* boolean
+
+Whether to destroy all cloudwatch log groups linked to aws lambda functions.
+
+This does not affect log groups specified in the cloudformation template,
+only the ones that are automatically created by the lambda service.
+
+---
+
 ### ByResourceOptions <a name="ByResourceOptions" id="cdk-self-destruct.ByResourceOptions"></a>
 
 #### Initializer <a name="Initializer" id="cdk-self-destruct.ByResourceOptions.Initializer"></a>
@@ -210,6 +243,7 @@ const defaultBehavior: DefaultBehavior = { ... }
 | --- | --- | --- |
 | <code><a href="#cdk-self-destruct.DefaultBehavior.property.destoryAllResources">destoryAllResources</a></code> | <code>boolean</code> | Whether to set the removal policy of all resources that are not additionally specified to DESTROY. |
 | <code><a href="#cdk-self-destruct.DefaultBehavior.property.purgeResourceDependencies">purgeResourceDependencies</a></code> | <code>boolean</code> | Whether to destroy all data that a resource depends on. |
+| <code><a href="#cdk-self-destruct.DefaultBehavior.property.performAllAdditionalCleanup">performAllAdditionalCleanup</a></code> | <code>boolean</code> | Whether to destroy additional resources by default that are not automattically removed by cloudformation specified. |
 
 ---
 
@@ -237,6 +271,20 @@ Whether to destroy all data that a resource depends on.
 
 For example, if a bucket has objects in it, it cannot be deleted.
 Running step functions will also prevent the stack from being deleted.
+
+---
+
+##### `performAllAdditionalCleanup`<sup>Optional</sup> <a name="performAllAdditionalCleanup" id="cdk-self-destruct.DefaultBehavior.property.performAllAdditionalCleanup"></a>
+
+```typescript
+public readonly performAllAdditionalCleanup: boolean;
+```
+
+- *Type:* boolean
+
+Whether to destroy additional resources by default that are not automattically removed by cloudformation specified.
+
+At this time this only includes cloudwatch log groups linked to aws lambda functions.
 
 ---
 
@@ -499,6 +547,7 @@ const selfDestructProps: SelfDestructProps = { ... }
 | --- | --- | --- |
 | <code><a href="#cdk-self-destruct.SelfDestructProps.property.defaultBehavior">defaultBehavior</a></code> | <code><a href="#cdk-self-destruct.DefaultBehavior">DefaultBehavior</a></code> | Options to configure if resources should be destroyed by default. |
 | <code><a href="#cdk-self-destruct.SelfDestructProps.property.trigger">trigger</a></code> | <code><a href="#cdk-self-destruct.TriggerOptions">TriggerOptions</a></code> | Options to configure the trigger of the stack destruction. |
+| <code><a href="#cdk-self-destruct.SelfDestructProps.property.additionalCleanup">additionalCleanup</a></code> | <code><a href="#cdk-self-destruct.AdditionalCleanupOptions">AdditionalCleanupOptions</a></code> | Additional cleanup for resources not specified in the cloudformation template. |
 | <code><a href="#cdk-self-destruct.SelfDestructProps.property.byResource">byResource</a></code> | <code><a href="#cdk-self-destruct.ByResourceOptions">ByResourceOptions</a></code> | Destroy/Retain resources by resource type. |
 | <code><a href="#cdk-self-destruct.SelfDestructProps.property.s3Buckets">s3Buckets</a></code> | <code><a href="#cdk-self-destruct.S3Options">S3Options</a></code> | Options to configure the s3 bucket destruction. |
 | <code><a href="#cdk-self-destruct.SelfDestructProps.property.stepFunctions">stepFunctions</a></code> | <code><a href="#cdk-self-destruct.StepFunctionsOptions">StepFunctionsOptions</a></code> | Options to configure the step functions destruction. |
@@ -526,6 +575,18 @@ public readonly trigger: TriggerOptions;
 - *Type:* <a href="#cdk-self-destruct.TriggerOptions">TriggerOptions</a>
 
 Options to configure the trigger of the stack destruction.
+
+---
+
+##### `additionalCleanup`<sup>Optional</sup> <a name="additionalCleanup" id="cdk-self-destruct.SelfDestructProps.property.additionalCleanup"></a>
+
+```typescript
+public readonly additionalCleanup: AdditionalCleanupOptions;
+```
+
+- *Type:* <a href="#cdk-self-destruct.AdditionalCleanupOptions">AdditionalCleanupOptions</a>
+
+Additional cleanup for resources not specified in the cloudformation template.
 
 ---
 
@@ -716,6 +777,7 @@ All aspects can visit an IConstruct.
 | **Name** | **Type** | **Description** |
 | --- | --- | --- |
 | <code><a href="#cdk-self-destruct.SelfDestructAspect.property.buckets">buckets</a></code> | <code>aws-cdk-lib.aws_s3.CfnBucket[]</code> | *No description.* |
+| <code><a href="#cdk-self-destruct.SelfDestructAspect.property.lambdaFunctions">lambdaFunctions</a></code> | <code>aws-cdk-lib.aws_lambda.CfnFunction[]</code> | *No description.* |
 | <code><a href="#cdk-self-destruct.SelfDestructAspect.property.scope">scope</a></code> | <code>aws-cdk-lib.Stack</code> | *No description.* |
 | <code><a href="#cdk-self-destruct.SelfDestructAspect.property.settings">settings</a></code> | <code><a href="#cdk-self-destruct.SelfDestructProps">SelfDestructProps</a></code> | *No description.* |
 | <code><a href="#cdk-self-destruct.SelfDestructAspect.property.stateMachines">stateMachines</a></code> | <code>aws-cdk-lib.aws_stepfunctions.CfnStateMachine[]</code> | *No description.* |
@@ -730,6 +792,16 @@ public readonly buckets: CfnBucket[];
 ```
 
 - *Type:* aws-cdk-lib.aws_s3.CfnBucket[]
+
+---
+
+##### `lambdaFunctions`<sup>Required</sup> <a name="lambdaFunctions" id="cdk-self-destruct.SelfDestructAspect.property.lambdaFunctions"></a>
+
+```typescript
+public readonly lambdaFunctions: CfnFunction[];
+```
+
+- *Type:* aws-cdk-lib.aws_lambda.CfnFunction[]
 
 ---
 

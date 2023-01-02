@@ -6,6 +6,7 @@ import {
   aws_dynamodb,
   aws_s3,
   aws_stepfunctions,
+  aws_lambda,
 } from "aws-cdk-lib";
 import { Template } from "aws-cdk-lib/assertions";
 import { SelfDestruct, SelfDestructProps } from "../src/index";
@@ -15,6 +16,14 @@ const blankStack = new Stack(blankApp);
 
 const demoApp = new App();
 const demoStack = new Stack(demoApp);
+
+new aws_lambda.Function(demoStack, "TestFunction", {
+  code: aws_lambda.Code.fromInline(
+    "exports.handler = function(event, context) { context.done(null, 'Hello'); }"
+  ),
+  handler: "index.handler",
+  runtime: aws_lambda.Runtime.NODEJS_16_X,
+});
 
 new aws_stepfunctions.StateMachine(demoStack, "TestStateMachine", {
   definition: new aws_stepfunctions.Pass(demoStack, "TestPass"),
@@ -32,6 +41,7 @@ const selfDestructProps: SelfDestructProps = {
   defaultBehavior: {
     destoryAllResources: false,
     purgeResourceDependencies: true,
+    performAllAdditionalCleanup: true,
   },
   trigger: {
     addFunctionUrl: {
@@ -116,4 +126,30 @@ test("Includes a dynamodb table with a deletionPolicy set to delete", () => {
   demoTemplate.hasResource("AWS::DynamoDB::Table", {
     DeletionPolicy: "Retain",
   });
+});
+
+test("Includes the destruction lambda function", () => {
+  const handler = Object.values(
+    demoTemplate.findResources("AWS::Lambda::Function", {
+      Properties: {
+        Description: "Destroy cloudformation stack: Default",
+        Handler: "index.handler",
+        MemorySize: 512,
+        Runtime: "nodejs16.x",
+        Timeout: 900,
+      },
+    })
+  )[0];
+
+  expect(handler).toBeDefined();
+
+  const environment = handler.Properties.Environment.Variables;
+
+  const { LOG_GROUPS, S3_BUCKETS, STATE_MACHINES, STACK_NAME } = environment;
+
+  expect(STACK_NAME).toBe("Default");
+
+  expect(S3_BUCKETS.Ref.includes("TestBucket")).toBe(true);
+  expect(STATE_MACHINES.Ref.includes("TestStateMachine")).toBe(true);
+  expect(LOG_GROUPS["Fn::Join"][1][1].Ref.includes("TestFunction")).toBe(true);
 });
