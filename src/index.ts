@@ -192,7 +192,48 @@ export interface SelfDestructProps {
   readonly additionalCleanup?: AdditionalCleanupOptions;
 }
 
-const shouldDestroy = (value: boolean | undefined, defaultValue = false) => {
+const shouldDestroy = (
+  value: boolean | undefined,
+  defaultValue = false,
+  fineGrainedSetting?: { resourceName: string; byResource?: ByResourceOptions }
+) => {
+  if (fineGrainedSetting) {
+    const includedInRetain =
+      fineGrainedSetting.byResource?.resourcesToRetain?.includes(
+        fineGrainedSetting.resourceName
+      );
+    const includedInDestroy =
+      fineGrainedSetting.byResource?.resourcesToDestroy?.includes(
+        fineGrainedSetting.resourceName
+      );
+
+    if (includedInRetain && includedInDestroy) {
+      throw new Error(
+        "resource is included in both resourcesToRetain and resourcesToDestroy: " +
+          fineGrainedSetting.resourceName
+      );
+    }
+
+    const shouldDestroyByResource =
+      (includedInRetain === true ? false : undefined) ??
+      (includedInDestroy === true ? true : undefined);
+
+    if (
+      value !== undefined &&
+      shouldDestroyByResource !== undefined &&
+      shouldDestroyByResource !== value
+    ) {
+      throw new Error(
+        "fine grained settings and byResource options are conflicting for resource: " +
+          fineGrainedSetting.resourceName
+      );
+    }
+
+    if (value !== undefined) return value;
+
+    if (shouldDestroyByResource !== undefined) return shouldDestroyByResource;
+  }
+
   if (value === undefined) {
     return defaultValue;
   }
@@ -224,7 +265,13 @@ export class SelfDestructAspect implements IAspect {
       s3Buckets,
       defaultBehavior: { destoryAllResources: all },
     } = this.settings;
-    if (node instanceof CfnBucket && shouldDestroy(s3Buckets?.enabled, all)) {
+    if (
+      node instanceof CfnBucket &&
+      shouldDestroy(s3Buckets?.enabled, all, {
+        resourceName: "AWS::S3::Bucket",
+        byResource: this.settings.byResource,
+      })
+    ) {
       this.buckets.push(node);
       node.applyRemovalPolicy(RemovalPolicy.DESTROY);
     } else if (node instanceof CfnStateMachine) {
@@ -253,7 +300,8 @@ export class SelfDestructAspect implements IAspect {
               ? true
               : undefined,
             this.settings.defaultBehavior.destoryAllResources
-          )
+          ) &&
+          node.cfnResourceType !== "AWS::S3::Bucket"
         ) {
           node.applyRemovalPolicy(RemovalPolicy.DESTROY);
         }
@@ -278,7 +326,8 @@ export class SelfDestructAspect implements IAspect {
 
     const environment = {
       S3_BUCKETS: shouldDestroy(
-        this.settings.s3Buckets?.purgeNonEmptyBuckets,
+        this.settings.s3Buckets?.purgeNonEmptyBuckets &&
+          this.settings.s3Buckets?.enabled,
         all
       )
         ? S3_BUCKETS
