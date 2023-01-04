@@ -134,6 +134,8 @@ Whether to destroy all cloudwatch log groups linked to aws lambda functions.
 This does not affect log groups specified in the cloudformation template,
 only the ones that are automatically created by the lambda service.
 
+It deletes the log groups for all lambda functions in the stack with the format `/aws/lambda/<function-name>`.
+
 ---
 
 ### ByResourceOptions <a name="ByResourceOptions" id="cdk-self-destruct.ByResourceOptions"></a>

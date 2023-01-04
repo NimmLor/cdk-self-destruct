@@ -64,7 +64,14 @@ const stopAllExecutions = async (stateMachineArn: string) => {
 };
 
 const deleteLogGroup = async (logGroupName: string) => {
-  return cwl.deleteLogGroup({ logGroupName }).promise();
+  return cwl
+    .deleteLogGroup({ logGroupName })
+    .promise()
+    .catch((error) => {
+      if (error.code !== "ResourceNotFoundException") {
+        console.warn("Failed to delete log group: " + logGroupName, { error });
+      }
+    });
 };
 
 export const handler = async (
