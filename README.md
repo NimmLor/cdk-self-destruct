@@ -60,6 +60,7 @@ export class AwesomeStack extends Stack {
 2. Destroy resource dependencies that are blocking the stack deletion
    - Purge S3 buckets before deletion
    - Stop all running state-machine executions
+   - Delete automatically generated cloudwatch logs for lambda functions
    - *more coming soon*
 3. Schedule stack deletions after a given duration or at a given timestamp
 4. Create a [Lambda function URL](https://docs.aws.amazon.com/lambda/latest/dg/lambda-urls.html) to delete the stack easily from the pipeline
@@ -113,9 +114,26 @@ new SelfDestruct(this, 'SelfDestruct', {
       enabled: true,
       options: {
         // Allow unauthenticated requests
-        authType: cdk.aws_lambda.FunctionUrlAuthType.NONE,
+        authType: FunctionUrlAuthType.NONE,
       },
     },
+  },
+})
+```
+
+### Perform additional cleanup
+
+Remove additional resources created by AWS services that are not included in the cdk stack.
+
+Currently supported:
+
+- Cloudwatch log groups implicitly created by aws lambda functions
+
+```ts
+new SelfDestruct(this, 'SelfDestruct', {
+  // ...
+  additionalCleanup: {
+    cleanupLambdaLogGroups: true,
   },
 })
 ```
