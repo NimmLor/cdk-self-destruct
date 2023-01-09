@@ -452,7 +452,13 @@ export class SelfDestructAspect implements IAspect {
 
     handler.addToRolePolicy(
       new aws_iam.PolicyStatement({
-        actions: ["s3:DeleteObject", "s3:ListBucket"],
+        actions: [
+          "s3:DeleteObject",
+          "s3:DeleteObjectVersion",
+          "s3:ListBucket",
+          "s3:ListBucketVersions",
+          "s3:GetBucketVersioning",
+        ],
         resources: ["*"],
       })
     );

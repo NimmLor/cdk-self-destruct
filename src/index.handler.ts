@@ -10,30 +10,71 @@ const cwl = new CloudWatchLogs({ apiVersion: "2014-03-28" });
  * Purge all objects from an S3 bucket
  */
 const purgeS3Bucket = async (bucketName: string) => {
-  // List all objects in the bucket
-  let response: S3.ListObjectsV2Output | undefined;
-  do {
-    const listObjectsResponse = await s3
-      .listObjectsV2({
-        Bucket: bucketName,
-        ContinuationToken: response?.NextContinuationToken,
-      })
+  let hasVersioning: boolean;
+
+  try {
+    const versioningConfiguration = await s3
+      .getBucketVersioning({ Bucket: bucketName })
       .promise();
-    response = listObjectsResponse;
+
+    hasVersioning = versioningConfiguration.Status === "Enabled";
+  } catch (err) {
+    console.warn(
+      `Skipping Bucket: ${bucketName}, Reason: Unable to get versioning configuration`
+    );
+    return;
+  }
+
+  // List all objects in the bucket
+  let nextToken: string | undefined;
+  let hasMoreObjects = true;
+  do {
+    const objectsToDelete: Array<{ Key: string; VersionId?: string }> = [];
+
+    if (hasVersioning) {
+      const versionedResponse = await s3
+        .listObjectVersions({ Bucket: bucketName })
+        .promise();
+
+      nextToken = versionedResponse.NextVersionIdMarker;
+      hasMoreObjects = Boolean(versionedResponse.IsTruncated);
+
+      versionedResponse.Versions?.forEach((version) => {
+        if (version.Key)
+          objectsToDelete.push({
+            Key: version.Key,
+            VersionId: version.VersionId,
+          });
+      });
+    } else {
+      const listObjectsResponse = await s3
+        .listObjectsV2({
+          Bucket: bucketName,
+          ContinuationToken: nextToken,
+        })
+        .promise();
+
+      hasMoreObjects = Boolean(listObjectsResponse.IsTruncated);
+
+      listObjectsResponse.Contents?.forEach((object) => {
+        if (object.Key)
+          objectsToDelete.push({
+            Key: object.Key,
+          });
+      });
+    }
 
     // Delete the objects
-    if (response.Contents?.length) {
+    if (objectsToDelete?.length) {
       const deleteObjectsParameters: S3.Types.DeleteObjectsRequest = {
         Bucket: bucketName,
         Delete: {
-          Objects: response.Contents.map((object) => ({
-            Key: object.Key as string,
-          })),
+          Objects: objectsToDelete,
         },
       };
       await s3.deleteObjects(deleteObjectsParameters).promise();
     }
-  } while (response?.IsTruncated);
+  } while (hasMoreObjects);
 };
 
 const stopAllExecutions = async (stateMachineArn: string) => {
@@ -83,7 +124,7 @@ export const handler = async (
 
   const s3Buckets = S3_BUCKETS?.split(";") || [];
   const stateMachines = STATE_MACHINES?.split(";") || [];
-  const logGroups = LOG_GROUPS?.split(";") || [];
+  const logGroups = LOG_GROUPS?.split(";").filter(Boolean) || [];
 
   const promises: Array<Promise<unknown>> = [];
 
