@@ -143,7 +143,7 @@ export const handler = async (
   }
 
   for (const logGroup of logGroups) {
-    if (logGroups) {
+    if (logGroup) {
       console.log("Deleting log group: " + logGroup);
       promises.push(deleteLogGroup(logGroup));
     }
