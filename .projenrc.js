@@ -4,7 +4,7 @@ const {
   VscodeConfig,
   GitConfig,
 } = require('@atws/projen-config')
-const { awscdk } = require('projen')
+const { awscdk, JsonFile } = require('projen')
 
 const cdkVersion = '2.51.0'
 
@@ -22,7 +22,7 @@ const project = new awscdk.AwsCdkConstructLibrary({
   majorVersion: 1,
 
   deps: [],
-  devDeps: ['aws-sdk', 'esbuild', '@atws/projen-config'],
+  devDeps: ['aws-sdk', 'esbuild', '@atws/projen-config', '@atws/tsconfig'],
   packageName: 'cdk-self-destruct',
   jest: true,
   jestOptions: {
@@ -36,6 +36,18 @@ const project = new awscdk.AwsCdkConstructLibrary({
   },
   prettier: true,
   workflowNodeVersion: '16.x',
+})
+
+project.tryRemoveFile('tsconfig.json')
+
+new JsonFile(project, 'tsconfig.json', {
+  marker: false,
+  readonly: true,
+  obj: {
+    extends: '@atws/tsconfig/base',
+    include: ['src/**/*.ts'],
+    exclude: ['node_modules'],
+  },
 })
 
 new PrettierConfig(project)
