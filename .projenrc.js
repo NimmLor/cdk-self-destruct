@@ -34,6 +34,7 @@ const project = new awscdk.AwsCdkConstructLibrary({
     prettier: true,
   },
   prettier: true,
+  workflowNodeVersion: '16.x',
 })
 
 new PrettierConfig(project)
