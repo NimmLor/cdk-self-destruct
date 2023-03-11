@@ -1,6 +1,7 @@
 {
   "files": [
-    ".eslintrc.json",
+    ".editorconfig",
+    ".eslintrc",
     ".gitattributes",
     ".github/pull_request_template.md",
     ".github/workflows/build.yml",
@@ -10,10 +11,12 @@
     ".gitignore",
     ".mergify.yml",
     ".prettierignore",
-    ".prettierrc.json",
+    ".prettierrc.js",
     ".projen/deps.json",
     ".projen/files.json",
     ".projen/tasks.json",
+    ".vscode/extensions.json",
+    ".vscode/settings.json",
     "LICENSE",
     "tsconfig.dev.json"
   ],

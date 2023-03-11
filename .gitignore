@@ -53,3 +53,8 @@ junit.xml
 .jsii
 tsconfig.json
 !/API.md
+!/.prettierrc.js
+!/.eslintrc
+!/.vscode/settings.json
+!/.editorconfig
+!/.vscode/extensions.json

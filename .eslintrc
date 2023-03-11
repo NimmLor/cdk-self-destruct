@@ -1,0 +1,14 @@
+{
+  "extends": [
+    "@atws/eslint-config"
+  ],
+  "overrides": [
+    {
+      "extends": [
+        "@atws/eslint-config/cdk"
+      ],
+      "files": "src/**/*.ts"
+    }
+  ],
+  "root": true
+}
