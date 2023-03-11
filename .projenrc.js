@@ -36,15 +36,6 @@ const project = new awscdk.AwsCdkConstructLibrary({
   },
   prettier: true,
   workflowNodeVersion: '16.x',
-  tsconfig: {
-    include: ['src/**/*.ts'],
-    exclude: ['node_modules'],
-    compilerOptions: {
-      lib: ['ESNext'],
-      module: 'commonjs',
-      target: 'ESNext',
-    },
-  },
 })
 
 new PrettierConfig(project)
