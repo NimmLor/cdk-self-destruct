@@ -5,7 +5,7 @@
   "overrides": [
     {
       "extends": [
-        "@atws/eslint-config/cdk"
+        "@atws/eslint-config/projen"
       ],
       "files": "src/**/*.ts"
     }

@@ -37,10 +37,10 @@
   dependencies:
     prettier-plugin-packagejson "^2.4.3"
 
-"@atws/projen-config@^1.7.1":
-  version "1.7.1"
-  resolved "https://registry.yarnpkg.com/@atws/projen-config/-/projen-config-1.7.1.tgz#c719908f71ef95e63e2a916a0c3dab2ba88fd9f5"
-  integrity sha512-ebO1ZwhhjwCAOajMKahIFBjgq6q+iqHKnewmDd+05WQra+CqqC7VQDWARIvsi7Lzc4oH18GCYWmWJeNKTLktrQ==
+"@atws/projen-config@^1.8.0":
+  version "1.8.0"
+  resolved "https://registry.yarnpkg.com/@atws/projen-config/-/projen-config-1.8.0.tgz#5229f3e84abe9044ebf864d6ad79755b00bacb59"
+  integrity sha512-OmN/CWhprWK3eW+CSLg0sG9hRQ433AGzx+QMkQz0wCE0SLk8mbynJV/nrr7C0N4zxt5WKZIEGdTEN9NUFlU5IQ==
   dependencies:
     projen "^0.67.80"
     typescript "^4.9.5"

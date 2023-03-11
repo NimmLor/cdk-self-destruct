@@ -213,7 +213,7 @@ const commonOptions: CommonOptions = { ... }
 
 | **Name** | **Type** | **Description** |
 | --- | --- | --- |
-| <code><a href="#cdk-self-destruct.CommonOptions.property.enabled">enabled</a></code> | <code>boolean</code> | Whether the resource's removal policy should be set to DESTROY.q. |
+| <code><a href="#cdk-self-destruct.CommonOptions.property.enabled">enabled</a></code> | <code>boolean</code> | Whether the resource's removal policy should be set to DESTROY. |
 
 ---
 
@@ -225,7 +225,7 @@ public readonly enabled: boolean;
 
 - *Type:* boolean
 
-Whether the resource's removal policy should be set to DESTROY.q.
+Whether the resource's removal policy should be set to DESTROY.
 
 ---
 
@@ -428,7 +428,7 @@ const s3Options: S3Options = { ... }
 
 | **Name** | **Type** | **Description** |
 | --- | --- | --- |
-| <code><a href="#cdk-self-destruct.S3Options.property.enabled">enabled</a></code> | <code>boolean</code> | Whether the resource's removal policy should be set to DESTROY.q. |
+| <code><a href="#cdk-self-destruct.S3Options.property.enabled">enabled</a></code> | <code>boolean</code> | Whether the resource's removal policy should be set to DESTROY. |
 | <code><a href="#cdk-self-destruct.S3Options.property.purgeNonEmptyBuckets">purgeNonEmptyBuckets</a></code> | <code>boolean</code> | Purge all objects from the bucket before deleting it. |
 
 ---
@@ -441,7 +441,7 @@ public readonly enabled: boolean;
 
 - *Type:* boolean
 
-Whether the resource's removal policy should be set to DESTROY.q.
+Whether the resource's removal policy should be set to DESTROY.
 
 ---
 
@@ -642,7 +642,7 @@ const stepFunctionsOptions: StepFunctionsOptions = { ... }
 
 | **Name** | **Type** | **Description** |
 | --- | --- | --- |
-| <code><a href="#cdk-self-destruct.StepFunctionsOptions.property.enabled">enabled</a></code> | <code>boolean</code> | Whether the resource's removal policy should be set to DESTROY.q. |
+| <code><a href="#cdk-self-destruct.StepFunctionsOptions.property.enabled">enabled</a></code> | <code>boolean</code> | Whether the resource's removal policy should be set to DESTROY. |
 | <code><a href="#cdk-self-destruct.StepFunctionsOptions.property.cancelRunningExecutions">cancelRunningExecutions</a></code> | <code>boolean</code> | Cancel all running executions before deleting the state machine. |
 
 ---
@@ -655,7 +655,7 @@ public readonly enabled: boolean;
 
 - *Type:* boolean
 
-Whether the resource's removal policy should be set to DESTROY.q.
+Whether the resource's removal policy should be set to DESTROY.
 
 ---
 

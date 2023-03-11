@@ -1,47 +1,43 @@
-import { type CfnCondition, type IAspect } from 'aws-cdk-lib'
 import {
   Aspects,
   aws_iam,
   aws_lambda,
   aws_lambda_nodejs,
   aws_scheduler,
+  CfnCondition,
   CfnOutput,
   CfnResource,
   Duration,
+  IAspect,
   RemovalPolicy,
   Stack,
 } from 'aws-cdk-lib'
-import { type FunctionUrlOptions } from 'aws-cdk-lib/aws-lambda'
-import { CfnFunction } from 'aws-cdk-lib/aws-lambda'
+import { CfnFunction, FunctionUrlOptions } from 'aws-cdk-lib/aws-lambda'
 import { CfnBucket } from 'aws-cdk-lib/aws-s3'
 import { CfnStateMachine } from 'aws-cdk-lib/aws-stepfunctions'
-import { type IConstruct } from 'constructs'
-import { Construct } from 'constructs'
+import { Construct, IConstruct } from 'constructs'
 
-export type CommonOptions = {
+export interface CommonOptions {
   /**
    * Whether the resource's removal policy should be set to DESTROY.
    */
   readonly enabled: boolean
 }
-
-export type S3Options = CommonOptions & {
+export interface S3Options extends CommonOptions {
   /**
    * Purge all objects from the bucket before deleting it.
    * This is mandatory if the bucket is not empty.
    */
   readonly purgeNonEmptyBuckets: boolean
 }
-
-export type StepFunctionsOptions = CommonOptions & {
+export interface StepFunctionsOptions extends CommonOptions {
   /**
    * Cancel all running executions before deleting the state machine.
    * Otherwise, the cloudformation stack will fail be waiting until all executions are finished.
    */
   readonly cancelRunningExecutions: boolean
 }
-
-export type FunctionUrlOutputProps = {
+export interface FunctionUrlOutputProps {
   /**
    * A condition to associate with this output value. If the condition evaluates
    * to `false`, this output value will not be included in the stack.
@@ -65,8 +61,7 @@ export type FunctionUrlOutputProps = {
    */
   readonly exportName?: string
 }
-
-export type FunctionUrlConfig = {
+export interface FunctionUrlConfig {
   /**
    * Options to add a cloudformation output to the stack.
    */
@@ -80,8 +75,7 @@ export type FunctionUrlConfig = {
    */
   readonly options?: FunctionUrlOptions
 }
-
-export type ScheduledTriggerOptions = {
+export interface ScheduledTriggerOptions {
   /**
    * The duration after starting the deployment after which the stack should be deleted.
    *
@@ -100,8 +94,7 @@ export type ScheduledTriggerOptions = {
   readonly atTimestamp?: number
   readonly enabled: boolean
 }
-
-export type TriggerOptions = {
+export interface TriggerOptions {
   /**
    * Use the lambda's function url to trigger the stack deletion.
    * This will add an output called `SelfDestructFunctionUrl` to the stack.
@@ -112,8 +105,7 @@ export type TriggerOptions = {
    */
   readonly scheduled?: ScheduledTriggerOptions
 }
-
-export type DefaultBehavior = {
+export interface DefaultBehavior {
   /**
    * Whether to set the removal policy of all resources that are not additionally specified to DESTROY
    */
@@ -124,7 +116,6 @@ export type DefaultBehavior = {
    * At this time this only includes cloudwatch log groups linked to aws lambda functions.
    */
   readonly performAllAdditionalCleanup?: boolean
-
   /**
    * Whether to destroy all data that a resource depends on.
    *
@@ -133,8 +124,7 @@ export type DefaultBehavior = {
    */
   readonly purgeResourceDependencies: boolean
 }
-
-export type AdditionalCleanupOptions = {
+export interface AdditionalCleanupOptions {
   /**
    * Whether to destroy all cloudwatch log groups linked to aws lambda functions.
    *
@@ -145,8 +135,7 @@ export type AdditionalCleanupOptions = {
    */
   readonly cleanupLambdaLogGroups: boolean
 }
-
-export type ByResourceOptions = {
+export interface ByResourceOptions {
   /**
    * A list of cloudformation resources that should be destroyed.
    *
@@ -164,8 +153,7 @@ export type ByResourceOptions = {
    */
   readonly resourcesToRetain?: string[]
 }
-
-export type SelfDestructProps = {
+export interface SelfDestructProps {
   /**
    * Additional cleanup for resources not specified in the cloudformation template.
    */
@@ -186,7 +174,6 @@ export type SelfDestructProps = {
    * Options to configure the step functions destruction.
    */
   readonly stepFunctions?: StepFunctionsOptions
-
   /**
    * Options to configure the trigger of the stack destruction.
    */
