@@ -1,28 +1,28 @@
-import { aws_lambda, App, Stack, Duration } from "aws-cdk-lib";
-import { SelfDestruct } from "./";
+import { SelfDestruct } from '.'
+import { App, aws_lambda, Duration, Stack } from 'aws-cdk-lib'
 
-const app = new App();
-const stack = new Stack(app, "SelfDestructIntegTestStack");
+const app = new App()
+const stack = new Stack(app, 'SelfDestructIntegTestStack')
 
-new SelfDestruct(stack, "SelfDestruct", {
+new SelfDestruct(stack, 'SelfDestruct', {
   defaultBehavior: {
     destoryAllResources: true,
-    purgeResourceDependencies: true,
     performAllAdditionalCleanup: true,
+    purgeResourceDependencies: true,
   },
   trigger: {
     addFunctionUrl: {
-      enabled: true,
       cloudformationOutput: {
-        description: "URL to invoke the self-destruct function",
+        description: 'URL to invoke the self-destruct function',
       },
+      enabled: true,
       options: {
         authType: aws_lambda.FunctionUrlAuthType.NONE,
       },
     },
     scheduled: {
-      enabled: true,
       afterDuration: Duration.minutes(15),
+      enabled: true,
     },
   },
-});
+})
