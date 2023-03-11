@@ -1,333 +1,336 @@
+/* eslint-disable jest/expect-expect */
+import { SelfDestruct, SelfDestructProps } from '../src'
 import {
   App,
-  Duration,
-  Stack,
   aws_cognito,
   aws_dynamodb,
+  aws_lambda,
   aws_s3,
   aws_stepfunctions,
-  aws_lambda,
-} from "aws-cdk-lib";
-import { Template } from "aws-cdk-lib/assertions";
-import { SelfDestruct, SelfDestructProps } from "../src/index";
+  Duration,
+  Stack,
+} from 'aws-cdk-lib'
+import { Template } from 'aws-cdk-lib/assertions'
 
-const blankApp = new App();
-const blankStack = new Stack(blankApp);
+const blankApp = new App()
+const blankStack = new Stack(blankApp)
 
-const demoApp = new App();
-const demoStack = new Stack(demoApp);
+const demoApp = new App()
+const demoStack = new Stack(demoApp)
 
-jest.setTimeout(20000);
+jest.setTimeout(20_000)
 
-new aws_lambda.Function(demoStack, "TestFunction", {
+new aws_lambda.Function(demoStack, 'TestFunction', {
   code: aws_lambda.Code.fromInline(
-    "exports.handler = function(event, context) { context.done(null, 'Hello'); }"
+    `exports.handler = function(event, context) { context.done(null, 'Hello'); }`
   ),
-  handler: "index.handler",
+  handler: 'index.handler',
   runtime: aws_lambda.Runtime.NODEJS_16_X,
-});
+})
 
-new aws_stepfunctions.StateMachine(demoStack, "TestStateMachine", {
-  definition: new aws_stepfunctions.Pass(demoStack, "TestPass"),
-});
+new aws_stepfunctions.StateMachine(demoStack, 'TestStateMachine', {
+  definition: new aws_stepfunctions.Pass(demoStack, 'TestPass'),
+})
 
-new aws_cognito.UserPool(demoStack, "TestUserPool", {});
-new aws_dynamodb.Table(demoStack, "TestTable", {
-  partitionKey: { name: "id", type: aws_dynamodb.AttributeType.STRING },
-});
+new aws_cognito.UserPool(demoStack, 'TestUserPool', {})
+new aws_dynamodb.Table(demoStack, 'TestTable', {
+  partitionKey: { name: 'id', type: aws_dynamodb.AttributeType.STRING },
+})
 
-new aws_s3.Bucket(blankStack, "TestBucket", {});
-new aws_s3.Bucket(demoStack, "TestBucket", {});
+new aws_s3.Bucket(blankStack, 'TestBucket', {})
+new aws_s3.Bucket(demoStack, 'TestBucket', {})
 
 const selfDestructProps: SelfDestructProps = {
+  byResource: {
+    resourcesToDestroy: ['AWS::Cognito::UserPool'],
+    resourcesToRetain: ['AWS::DynamoDB::Table'],
+  },
   defaultBehavior: {
     destoryAllResources: false,
-    purgeResourceDependencies: true,
     performAllAdditionalCleanup: true,
-  },
-  trigger: {
-    addFunctionUrl: {
-      enabled: true,
-      cloudformationOutput: {
-        exportName: "SelfDestructUrl",
-      },
-    },
-    scheduled: {
-      enabled: true,
-      afterDuration: Duration.minutes(15),
-    },
+    purgeResourceDependencies: true,
   },
   s3Buckets: {
     enabled: true,
     purgeNonEmptyBuckets: true,
   },
-  byResource: {
-    resourcesToDestroy: ["AWS::Cognito::UserPool"],
-    resourcesToRetain: ["AWS::DynamoDB::Table"],
+  trigger: {
+    addFunctionUrl: {
+      cloudformationOutput: {
+        exportName: 'SelfDestructUrl',
+      },
+      enabled: true,
+    },
+    scheduled: {
+      afterDuration: Duration.minutes(15),
+      enabled: true,
+    },
   },
-};
-new SelfDestruct(blankStack, "SelfDestruct", selfDestructProps);
-new SelfDestruct(demoStack, "SelfDestruct", selfDestructProps);
+}
+new SelfDestruct(blankStack, 'SelfDestruct', selfDestructProps)
+new SelfDestruct(demoStack, 'SelfDestruct', selfDestructProps)
 
-const blankTemplate = Template.fromStack(blankStack);
-const demoTemplate = Template.fromStack(demoStack);
+const blankTemplate = Template.fromStack(blankStack)
+const demoTemplate = Template.fromStack(demoStack)
 
-test("Stack destruction lambda function is be configured with properties and execution roles", () => {
-  blankTemplate.hasResourceProperties("AWS::Lambda::Function", {
-    Runtime: "nodejs16.x",
-  });
-  demoTemplate.hasResourceProperties("AWS::Lambda::Function", {
-    Runtime: "nodejs16.x",
-  });
-
-  const properties = {
-    AssumeRolePolicyDocument: {
-      Statement: [
-        {
-          Action: "sts:AssumeRole",
-          Effect: "Allow",
-          Principal: {
-            Service: "lambda.amazonaws.com",
-          },
-        },
-      ],
-      Version: "2012-10-17",
-    },
-  };
-
-  blankTemplate.hasResourceProperties("AWS::IAM::Role", properties);
-  demoTemplate.hasResourceProperties("AWS::IAM::Role", properties);
-});
-
-test("Stack includes output for functionUrl", () => {
-  blankTemplate.hasOutput("SelfDestructFunctionUrl", {
-    Export: { Name: "SelfDestructUrl" },
-  });
-});
-
-test("Stack includes EventBridge Schedule to delete the stack automatically", () => {
-  blankTemplate.hasResourceProperties("AWS::Scheduler::Schedule", {
-    FlexibleTimeWindow: {
-      Mode: "OFF",
-    },
-  });
-});
-
-test("Includes a s3 bucket with a deletionPolicy set to delete", () => {
-  blankTemplate.hasResource("AWS::S3::Bucket", {
-    DeletionPolicy: "Delete",
-  });
-  demoTemplate.hasResource("AWS::S3::Bucket", {
-    DeletionPolicy: "Delete",
-  });
-});
-
-test("Includes a cognito userpool with a deletionPolicy set to delete", () => {
-  demoTemplate.hasResource("AWS::Cognito::UserPool", {
-    DeletionPolicy: "Delete",
-  });
-});
-
-test("Includes a dynamodb table with a deletionPolicy set to retain", () => {
-  demoTemplate.hasResource("AWS::DynamoDB::Table", {
-    DeletionPolicy: "Retain",
-  });
-});
-
-test("Includes the destruction lambda function", () => {
+const checkSettings = (stack: Stack, destroy: boolean, purge: boolean) => {
+  const template = Template.fromStack(stack)
   const handler = Object.values(
-    demoTemplate.findResources("AWS::Lambda::Function", {
+    template.findResources('AWS::Lambda::Function', {
       Properties: {
-        Description: "Destroy cloudformation stack: Default",
-        Handler: "index.handler",
+        Description: 'Destroy cloudformation stack: Default',
+        Handler: 'index.handler',
         MemorySize: 512,
-        Runtime: "nodejs16.x",
+        Runtime: 'nodejs16.x',
         Timeout: 900,
       },
     })
-  )[0];
+  )[0]
+  template.hasResource('AWS::S3::Bucket', {
+    DeletionPolicy: destroy ? 'Delete' : 'Retain',
+  })
+  const S3_BUCKETS = handler.Properties.Environment.Variables.S3_BUCKETS
+  expect(S3_BUCKETS?.Ref?.includes('TestBucket') === true).toBe(purge)
+}
 
-  expect(handler).toBeDefined();
+const getSetup = () => {
+  const testApp = new App()
+  const testStack = new Stack(testApp)
+  const bucket = new aws_s3.Bucket(testStack, 'TestBucket')
+  return {
+    app: testApp,
+    bucket,
+    stack: testStack,
+  }
+}
 
-  const environment = handler.Properties.Environment.Variables;
+describe('Cloudformation Template validation', () => {
+  it('Stack destruction lambda function is be configured with properties and execution roles', () => {
+    blankTemplate.hasResourceProperties('AWS::Lambda::Function', {
+      Runtime: 'nodejs16.x',
+    })
+    demoTemplate.hasResourceProperties('AWS::Lambda::Function', {
+      Runtime: 'nodejs16.x',
+    })
 
-  const { LOG_GROUPS, S3_BUCKETS, STATE_MACHINES, STACK_NAME } = environment;
+    const properties = {
+      AssumeRolePolicyDocument: {
+        Statement: [
+          {
+            Action: 'sts:AssumeRole',
+            Effect: 'Allow',
+            Principal: {
+              Service: 'lambda.amazonaws.com',
+            },
+          },
+        ],
+        Version: '2012-10-17',
+      },
+    }
 
-  expect(STACK_NAME).toBe("Default");
+    blankTemplate.hasResourceProperties('AWS::IAM::Role', properties)
+    demoTemplate.hasResourceProperties('AWS::IAM::Role', properties)
+  })
 
-  expect(S3_BUCKETS.Ref.includes("TestBucket")).toBe(true);
-  expect(STATE_MACHINES.Ref.includes("TestStateMachine")).toBe(true);
-  expect(LOG_GROUPS["Fn::Join"][1][1].Ref.includes("TestFunction")).toBe(true);
-});
+  it('Stack includes output for functionUrl', () => {
+    blankTemplate.hasOutput('SelfDestructFunctionUrl', {
+      Export: { Name: 'SelfDestructUrl' },
+    })
+  })
 
-test("It handles fine grained permission settings as well as byResource", () => {
-  const getSetup = () => {
-    const testApp = new App();
-    const testStack = new Stack(testApp);
-    const bucket = new aws_s3.Bucket(testStack, "TestBucket");
-    return {
-      app: testApp,
-      stack: testStack,
-      bucket: bucket,
-    };
-  };
+  it('Stack includes EventBridge Schedule to delete the stack automatically', () => {
+    blankTemplate.hasResourceProperties('AWS::Scheduler::Schedule', {
+      FlexibleTimeWindow: {
+        Mode: 'OFF',
+      },
+    })
+  })
 
-  const checkSettings = (stack: Stack, destroy: boolean, purge: boolean) => {
-    const template = Template.fromStack(stack);
+  it('Includes a s3 bucket with a deletionPolicy set to delete', () => {
+    blankTemplate.hasResource('AWS::S3::Bucket', {
+      DeletionPolicy: 'Delete',
+    })
+    demoTemplate.hasResource('AWS::S3::Bucket', {
+      DeletionPolicy: 'Delete',
+    })
+  })
+
+  it('Includes a cognito userpool with a deletionPolicy set to delete', () => {
+    demoTemplate.hasResource('AWS::Cognito::UserPool', {
+      DeletionPolicy: 'Delete',
+    })
+  })
+
+  it('Includes a dynamodb table with a deletionPolicy set to retain', () => {
+    demoTemplate.hasResource('AWS::DynamoDB::Table', {
+      DeletionPolicy: 'Retain',
+    })
+  })
+
+  it('Includes the destruction lambda function', () => {
     const handler = Object.values(
-      template.findResources("AWS::Lambda::Function", {
+      demoTemplate.findResources('AWS::Lambda::Function', {
         Properties: {
-          Description: "Destroy cloudformation stack: Default",
-          Handler: "index.handler",
+          Description: 'Destroy cloudformation stack: Default',
+          Handler: 'index.handler',
           MemorySize: 512,
-          Runtime: "nodejs16.x",
+          Runtime: 'nodejs16.x',
           Timeout: 900,
         },
       })
-    )[0];
-    template.hasResource("AWS::S3::Bucket", {
-      DeletionPolicy: destroy ? "Delete" : "Retain",
-    });
-    const S3_BUCKETS = handler.Properties.Environment.Variables.S3_BUCKETS;
-    expect(S3_BUCKETS?.Ref?.includes("TestBucket") === true).toBe(purge);
-  };
+    )[0]
 
-  // test 0
+    expect(handler).toBeDefined()
 
-  const { stack: test0 } = getSetup();
+    const environment = handler.Properties.Environment.Variables
 
-  new SelfDestruct(test0, "SelfDestruct", {
-    defaultBehavior: {
-      destoryAllResources: true,
-      purgeResourceDependencies: true,
-    },
-    trigger: {},
-  });
+    const { LOG_GROUPS, S3_BUCKETS, STATE_MACHINES, STACK_NAME } = environment
 
-  checkSettings(test0, true, true);
+    expect(STACK_NAME).toBe('Default')
 
-  // test 1
+    expect(S3_BUCKETS.Ref).toContain('TestBucket')
+    expect(STATE_MACHINES.Ref).toContain('TestStateMachine')
+    expect(LOG_GROUPS['Fn::Join'][1][1].Ref).toContain('TestFunction')
+  })
 
-  const { stack: test1 } = getSetup();
+  it('handles fine grained permission settings as well as byResource', () => {
+    // test 0
 
-  new SelfDestruct(test1, "SelfDestruct", {
-    defaultBehavior: {
-      destoryAllResources: false,
-      purgeResourceDependencies: true,
-    },
-    byResource: {
-      resourcesToDestroy: ["AWS::S3::Bucket"],
-    },
-    trigger: {},
-  });
+    const { stack: test0 } = getSetup()
 
-  checkSettings(test1, true, true);
+    new SelfDestruct(test0, 'SelfDestruct', {
+      defaultBehavior: {
+        destoryAllResources: true,
+        purgeResourceDependencies: true,
+      },
+      trigger: {},
+    })
 
-  // test 2
+    checkSettings(test0, true, true)
 
-  const { stack: test2 } = getSetup();
+    // test 1
 
-  new SelfDestruct(test2, "SelfDestruct", {
-    defaultBehavior: {
-      destoryAllResources: false,
-      purgeResourceDependencies: false,
-    },
-    byResource: {
-      resourcesToDestroy: ["AWS::S3::Bucket"],
-    },
-    trigger: {},
-  });
+    const { stack: test1 } = getSetup()
 
-  checkSettings(test2, true, false);
+    new SelfDestruct(test1, 'SelfDestruct', {
+      byResource: {
+        resourcesToDestroy: ['AWS::S3::Bucket'],
+      },
+      defaultBehavior: {
+        destoryAllResources: false,
+        purgeResourceDependencies: true,
+      },
+      trigger: {},
+    })
 
-  // test 3
+    checkSettings(test1, true, true)
 
-  const { stack: test3 } = getSetup();
+    // test 2
 
-  new SelfDestruct(test3, "SelfDestruct", {
-    defaultBehavior: {
-      destoryAllResources: false,
-      purgeResourceDependencies: true,
-    },
-    byResource: {
-      resourcesToRetain: ["AWS::S3::Bucket"],
-    },
-    trigger: {},
-  });
+    const { stack: test2 } = getSetup()
 
-  checkSettings(test3, false, false);
+    new SelfDestruct(test2, 'SelfDestruct', {
+      byResource: {
+        resourcesToDestroy: ['AWS::S3::Bucket'],
+      },
+      defaultBehavior: {
+        destoryAllResources: false,
+        purgeResourceDependencies: false,
+      },
+      trigger: {},
+    })
 
-  // test 4
+    checkSettings(test2, true, false)
 
-  const { stack: test4 } = getSetup();
+    // test 3
 
-  new SelfDestruct(test4, "SelfDestruct", {
-    defaultBehavior: {
-      destoryAllResources: true,
-      purgeResourceDependencies: true,
-    },
-    byResource: {
-      resourcesToRetain: ["AWS::S3::Bucket"],
-    },
-    trigger: {},
-  });
+    const { stack: test3 } = getSetup()
 
-  checkSettings(test4, false, false);
+    new SelfDestruct(test3, 'SelfDestruct', {
+      byResource: {
+        resourcesToRetain: ['AWS::S3::Bucket'],
+      },
+      defaultBehavior: {
+        destoryAllResources: false,
+        purgeResourceDependencies: true,
+      },
+      trigger: {},
+    })
 
-  // test 5
+    checkSettings(test3, false, false)
 
-  const { stack: test5 } = getSetup();
+    // test 4
 
-  new SelfDestruct(test5, "SelfDestruct", {
-    defaultBehavior: {
-      destoryAllResources: true,
-      purgeResourceDependencies: true,
-    },
-    s3Buckets: {
-      enabled: false,
-      purgeNonEmptyBuckets: false,
-    },
-    trigger: {},
-  });
+    const { stack: test4 } = getSetup()
 
-  checkSettings(test5, false, false);
+    new SelfDestruct(test4, 'SelfDestruct', {
+      byResource: {
+        resourcesToRetain: ['AWS::S3::Bucket'],
+      },
+      defaultBehavior: {
+        destoryAllResources: true,
+        purgeResourceDependencies: true,
+      },
+      trigger: {},
+    })
 
-  // test 6
+    checkSettings(test4, false, false)
 
-  const { stack: test6 } = getSetup();
+    // test 5
 
-  new SelfDestruct(test6, "SelfDestruct", {
-    defaultBehavior: {
-      destoryAllResources: false,
-      purgeResourceDependencies: false,
-    },
-    s3Buckets: {
-      enabled: true,
-      purgeNonEmptyBuckets: true,
-    },
-    trigger: {},
-  });
+    const { stack: test5 } = getSetup()
 
-  checkSettings(test6, true, true);
+    new SelfDestruct(test5, 'SelfDestruct', {
+      defaultBehavior: {
+        destoryAllResources: true,
+        purgeResourceDependencies: true,
+      },
+      s3Buckets: {
+        enabled: false,
+        purgeNonEmptyBuckets: false,
+      },
+      trigger: {},
+    })
 
-  // test 7
+    checkSettings(test5, false, false)
 
-  const { stack: test7 } = getSetup();
+    // test 6
 
-  new SelfDestruct(test7, "SelfDestruct", {
-    defaultBehavior: {
-      destoryAllResources: false,
-      purgeResourceDependencies: false,
-    },
-    s3Buckets: {
-      enabled: true,
-      purgeNonEmptyBuckets: false,
-    },
-    byResource: {
-      resourcesToDestroy: ["AWS::S3::Bucket"],
-    },
-    trigger: {},
-  });
+    const { stack: test6 } = getSetup()
 
-  checkSettings(test7, true, false);
-});
+    new SelfDestruct(test6, 'SelfDestruct', {
+      defaultBehavior: {
+        destoryAllResources: false,
+        purgeResourceDependencies: false,
+      },
+      s3Buckets: {
+        enabled: true,
+        purgeNonEmptyBuckets: true,
+      },
+      trigger: {},
+    })
+
+    checkSettings(test6, true, true)
+
+    // test 7
+
+    const { stack: test7 } = getSetup()
+
+    new SelfDestruct(test7, 'SelfDestruct', {
+      byResource: {
+        resourcesToDestroy: ['AWS::S3::Bucket'],
+      },
+      defaultBehavior: {
+        destoryAllResources: false,
+        purgeResourceDependencies: false,
+      },
+      s3Buckets: {
+        enabled: true,
+        purgeNonEmptyBuckets: false,
+      },
+      trigger: {},
+    })
+
+    checkSettings(test7, true, false)
+  })
+})

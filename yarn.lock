@@ -17,10 +17,10 @@
   dependencies:
     node-fetch "^2.6.1"
 
-"@atws/eslint-config@^1.4.0":
-  version "1.4.0"
-  resolved "https://registry.yarnpkg.com/@atws/eslint-config/-/eslint-config-1.4.0.tgz#1b79635322fffa6789139448da500ae61653b6ca"
-  integrity sha512-cuxja6DPzEebDtERAT30ymxFVY44YXqdm6G2PW2qwtv4Bx2ktFvyTVh2jslm2sW5Hemlu93DYDSTUcJVcAJayg==
+"@atws/eslint-config@^1.7.1":
+  version "1.7.1"
+  resolved "https://registry.yarnpkg.com/@atws/eslint-config/-/eslint-config-1.7.1.tgz#eb12b5aa1784198cb0ab443dc7a7c2b9d19e8804"
+  integrity sha512-SJz4BlSf7I8+CZLROVv/4PovDBeOFp/oGxq7S7bQdd5t/lTNRXQqgUmz1TtSrFewVSO0MNEwGC7EsTyYtIlQhg==
   dependencies:
     "@typescript-eslint/eslint-plugin" "^5.54.1"
     "@typescript-eslint/parser" "^5.26.0"

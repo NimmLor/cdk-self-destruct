@@ -40,8 +40,12 @@ const project = new awscdk.AwsCdkConstructLibrary({
 
 new PrettierConfig(project)
 
-new EslintConfig(project, {
-  projenFileRegex: 'src/**/*.ts',
+const eslintFile = new EslintConfig(project, {
+  projenFileRegex: '{src,test}/*.ts',
+}).getFiles().eslintConfig
+
+eslintFile.addOverride('overrides.0.parserOptions', {
+  project: './tsconfig.dev.json',
 })
 
 new VscodeConfig(project, {
