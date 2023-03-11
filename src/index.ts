@@ -20,7 +20,7 @@ import { Construct } from 'constructs'
 
 export type CommonOptions = {
   /**
-   * Whether the resource's removal policy should be set to DESTROY.q
+   * Whether the resource's removal policy should be set to DESTROY.
    */
   readonly enabled: boolean
 }
@@ -331,8 +331,7 @@ export class SelfDestructAspect implements IAspect {
         ? this.lambdaFunctions.map(({ ref }) => `/aws/lambda/${ref}`).join(';')
         : '',
       S3_BUCKETS: shouldDestroy(
-        this.settings.s3Buckets?.purgeNonEmptyBuckets === true &&
-          this.settings.s3Buckets?.enabled,
+        this.settings.s3Buckets?.purgeNonEmptyBuckets,
         all
       )
         ? S3_BUCKETS
