@@ -49,6 +49,7 @@ new VscodeConfig(project, {
     addCdkExtensions: true,
     addCoreExtensions: true,
     addNodeExtensions: true,
+    additionalExtensions: ['MarkMcCulloh.vscode-projen'],
   },
 })
 
