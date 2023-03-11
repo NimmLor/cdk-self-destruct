@@ -38,6 +38,7 @@
     "@atws/eslint-config": "^1.4.0",
     "@atws/prettier-config": "^1.2.0",
     "@atws/projen-config": "^1.7.1",
+    "@atws/tsconfig": "^1.4.3",
     "@types/jest": "^27",
     "@types/node": "^14",
     "@typescript-eslint/eslint-plugin": "^5",

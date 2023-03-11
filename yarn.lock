@@ -45,6 +45,11 @@
     projen "^0.67.80"
     typescript "^4.9.5"
 
+"@atws/tsconfig@^1.4.3":
+  version "1.4.3"
+  resolved "https://registry.yarnpkg.com/@atws/tsconfig/-/tsconfig-1.4.3.tgz#0e55a72411e462e971248a5b6cf7096b3eae5ada"
+  integrity sha512-Cw/A5e3LV3bPi+mQBwRO7cl2G0FQcD+xvK/ZHy9NtxNiXNLTtbLmyj4spMmSgO9cyfiVuJZQ87ouhnd0SpPBxQ==
+
 "@aws-cdk/asset-awscli-v1@^2.2.9":
   version "2.2.101"
   resolved "https://registry.yarnpkg.com/@aws-cdk/asset-awscli-v1/-/asset-awscli-v1-2.2.101.tgz#098f44663eaf5991521139d660a2ea56a7ae0640"
