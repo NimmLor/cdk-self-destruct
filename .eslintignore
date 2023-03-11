@@ -1,0 +1,6 @@
+.*/*
+generated
+coverage
+.eslintrc.js
+*.png
+tsconfig.json

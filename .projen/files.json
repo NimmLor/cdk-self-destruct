@@ -1,6 +1,7 @@
 {
   "files": [
     ".editorconfig",
+    ".eslintignore",
     ".eslintrc",
     ".gitattributes",
     ".github/pull_request_template.md",

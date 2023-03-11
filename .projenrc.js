@@ -2,6 +2,7 @@ const {
   PrettierConfig,
   EslintConfig,
   VscodeConfig,
+  GitConfig,
 } = require('@atws/projen-config')
 const { awscdk } = require('projen')
 
@@ -50,5 +51,7 @@ new VscodeConfig(project, {
     addNodeExtensions: true,
   },
 })
+
+new GitConfig(project)
 
 project.synth()

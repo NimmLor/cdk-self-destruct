@@ -55,6 +55,7 @@ tsconfig.json
 !/API.md
 !/.prettierrc.js
 !/.eslintrc
+!/.eslintignore
 !/.vscode/settings.json
 !/.editorconfig
 !/.vscode/extensions.json

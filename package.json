@@ -35,9 +35,9 @@
     "organization": false
   },
   "devDependencies": {
-    "@atws/eslint-config": "^1.3.3",
-    "@atws/prettier-config": "^1.1.3",
-    "@atws/projen-config": "^1.4.1",
+    "@atws/eslint-config": "^1.4.0",
+    "@atws/prettier-config": "^1.2.0",
+    "@atws/projen-config": "^1.7.0",
     "@types/jest": "^27",
     "@types/node": "^14",
     "@typescript-eslint/eslint-plugin": "^5",
