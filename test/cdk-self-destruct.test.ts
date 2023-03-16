@@ -1,5 +1,6 @@
 /* eslint-disable jest/expect-expect */
-import { SelfDestruct, SelfDestructProps } from '../src'
+import type { SelfDestructProps } from '../src'
+import { SelfDestruct } from '../src'
 import {
   App,
   aws_cognito,

@@ -1,10 +1,10 @@
-const {
-  PrettierConfig,
+import {
   EslintConfig,
-  VscodeConfig,
   GitConfig,
-} = require('@atws/projen-config')
-const { awscdk, JsonFile } = require('projen')
+  PrettierConfig,
+  VscodeConfig,
+} from '@atws/projen-config'
+import { awscdk } from 'projen'
 
 const cdkVersion = '2.51.0'
 
@@ -13,39 +13,36 @@ const project = new awscdk.AwsCdkConstructLibrary({
   authorAddress: 'admin@nimmervoll.work',
   cdkVersion,
   defaultReleaseBranch: 'main',
-  name: 'cdk-self-destruct',
-  repositoryUrl: 'https://github.com/NimmLor/cdk-self-destruct.git',
-  stability: 'experimental',
+  deps: [],
   description:
     'A construct that allows you to self-destruct your AWS resources in a given stack',
-  keywords: ['cdk', 'awscdk', 'aws-cdk'],
-  majorVersion: 1,
-
-  deps: [],
-  devDeps: ['aws-sdk', 'esbuild', '@atws/projen-config', '@atws/tsconfig'],
-  packageName: 'cdk-self-destruct',
+  devDeps: [
+    'aws-sdk@2.1083.0',
+    'esbuild',
+    '@atws/projen-config',
+    '@atws/tsconfig',
+  ],
+  gitignore: ['cdk.out', 'tsconfig.json'],
   jest: true,
   jestOptions: {
     extraCliOptions: [
       '--testMatch "**/(test|src)/**/*(*.)@(spec|test).ts?(x)"',
     ],
   },
-  gitignore: ['cdk.out'],
-  eslintOptions: {
-    prettier: true,
-  },
-  prettier: true,
+  keywords: ['cdk', 'awscdk', 'aws-cdk'],
+
+  majorVersion: 1,
+  name: 'cdk-self-destruct',
+  packageName: 'cdk-self-destruct',
+  projenrcTs: true,
+  repositoryUrl: 'https://github.com/NimmLor/cdk-self-destruct.git',
+  stability: 'experimental',
   workflowNodeVersion: '16.x',
 })
-
 new PrettierConfig(project)
 
-const eslintFile = new EslintConfig(project, {
+new EslintConfig(project, {
   projenFileRegex: '{src,test}/*.ts',
-}).getFiles().eslintConfig
-
-eslintFile.addOverride('overrides.0.parserOptions', {
-  project: './tsconfig.dev.json',
 })
 
 new VscodeConfig(project, {
@@ -53,7 +50,6 @@ new VscodeConfig(project, {
     addCdkExtensions: true,
     addCoreExtensions: true,
     addNodeExtensions: true,
-    additionalExtensions: ['MarkMcCulloh.vscode-projen'],
   },
 })
 

@@ -1,21 +1,22 @@
+import type { CfnCondition, IAspect } from 'aws-cdk-lib'
 import {
   Aspects,
   aws_iam,
   aws_lambda,
   aws_lambda_nodejs,
   aws_scheduler,
-  CfnCondition,
   CfnOutput,
   CfnResource,
   Duration,
-  IAspect,
   RemovalPolicy,
   Stack,
 } from 'aws-cdk-lib'
-import { CfnFunction, FunctionUrlOptions } from 'aws-cdk-lib/aws-lambda'
+import type { FunctionUrlOptions } from 'aws-cdk-lib/aws-lambda'
+import { CfnFunction } from 'aws-cdk-lib/aws-lambda'
 import { CfnBucket } from 'aws-cdk-lib/aws-s3'
 import { CfnStateMachine } from 'aws-cdk-lib/aws-stepfunctions'
-import { Construct, IConstruct } from 'constructs'
+import type { IConstruct } from 'constructs'
+import { Construct } from 'constructs'
 
 export interface CommonOptions {
   /**

@@ -4,3 +4,6 @@ coverage
 .eslintrc.js
 *.png
 tsconfig.json
+tsconfig.*.json
+!.projenrc.js
+!.projenrc.ts
