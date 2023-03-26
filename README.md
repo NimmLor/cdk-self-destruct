@@ -1,11 +1,13 @@
-<p align="center">
- <img src="logo.png" alt="vacuum" height="300px"/>
-</p>
+[![cdk-self-destruct](logo.png)](https://github.com/NimmLor/cdk-self-destruct)
 
-[![npm version](https://badge.fury.io/js/cdk-self-destruct.svg)](https://badge.fury.io/js/cdk-self-destruct)
+[![npm version](https://badge.fury.io/js/cdk-self-destruct.svg)](https://npmjs.com/package/cdk-self-destruct)
 ![Pipeline](https://github.com/NimmLor/cdk-self-destruct/actions/workflows/release.yml/badge.svg)
 
-A solid tool for destroying temporary CDK environments, which are commonly used in automated testing. With its scheduling feature for stack destruction, you can easily set a time and date or generate a url for the automatic removal of unnecessary stacks, freeing up resources and optimizing the testing workflow. It also removes resources that are impeding stack deletion, such as non-empty S3 buckets.
+A cdk construct for destroying CDK environments, which may be used in automated testing.
+
+All resources in the stack may be set to be destroyed regardless of their `RemovalPolicy` or they may be retained.
+
+With its scheduling feature for stack destruction, you can easily set a time and date or generate a url for the automatic removal of unnecessary stacks, freeing up resources and optimizing the testing workflow. It also removes resources that are impeding stack deletion, such as non-empty S3 buckets.
 
 Inspired by [cdk-time-bomb](https://github.com/jmb12686/cdk-time-bomb), rewritten with aws-cdk v2 and the new [AWS EventBridge Scheduler](https://aws.amazon.com/de/blogs/compute/introducing-amazon-eventbridge-scheduler).
 
@@ -31,11 +33,7 @@ import { type Construct } from 'constructs'
 import { SelfDestruct } from 'cdk-self-destruct'
 
 export class AwesomeStack extends Stack {
-  public constructor(
-    scope: Construct,
-    id: string,
-    props: StackProps
-  ) {
+  public constructor(scope: Construct, id: string, props: StackProps) {
     super(scope, id, props)
 
     new SelfDestruct(this, 'SelfDestruct', {
@@ -61,7 +59,7 @@ export class AwesomeStack extends Stack {
    - Purge S3 buckets before deletion
    - Stop all running state-machine executions
    - Delete automatically generated cloudwatch logs for lambda functions
-   - *more coming soon*
+   - _more coming soon_
 3. Schedule stack deletions after a given duration or at a given timestamp
 4. Create a [Lambda function URL](https://docs.aws.amazon.com/lambda/latest/dg/lambda-urls.html) to delete the stack easily from the pipeline
 
