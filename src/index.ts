@@ -278,16 +278,13 @@ export class SelfDestructAspect implements IAspect {
       const att = node.getAtt('DeletionPolicy')
       if (
         att.displayName === 'DeletionPolicy' &&
-        this.settings.byResource?.resourcesToRetain?.includes(
-          node.cfnResourceType
-        ) === false &&
         shouldDestroy(
-          this.settings.byResource?.resourcesToDestroy?.includes(
-            node.cfnResourceType
-          ) === true
-            ? true
-            : undefined,
-          this.settings.defaultBehavior.destoryAllResources
+          undefined,
+          this.settings.defaultBehavior.destoryAllResources,
+          {
+            byResource: this.settings.byResource,
+            resourceName: node.cfnResourceType,
+          }
         ) &&
         node.cfnResourceType !== 'AWS::S3::Bucket'
       ) {
